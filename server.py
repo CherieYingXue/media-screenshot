@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 
 from flask import Flask, jsonify, send_from_directory
-from playwright.sync_api import sync_playwright
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 PORT = int(os.environ.get("PORT", 3847))
@@ -33,11 +32,13 @@ _browser = None
 
 def get_browser():
     global _playwright, _browser
+    from playwright.sync_api import sync_playwright
+
     if _browser is None or not _browser.is_connected():
         _playwright = sync_playwright().start()
         _browser = _playwright.chromium.launch(
             headless=True,
-            args=["--disable-http2"],
+            args=["--disable-http2", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
         )
     return _browser
 
@@ -60,7 +61,8 @@ def capture_screenshot(site):
         page.screenshot(path=str(filepath), full_page=False)
     except Exception as chromium_err:
         context.close()
-        # Washington Post and similar sites sometimes fail on Chromium HTTP/2
+        from playwright.sync_api import sync_playwright
+
         pw = sync_playwright().start()
         try:
             fx = pw.firefox.launch(headless=True)
@@ -85,6 +87,11 @@ def capture_screenshot(site):
         "url": f"/screenshots/{filename}",
         "capturedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
 @app.route("/")
