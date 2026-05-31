@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from flask import Flask, jsonify, send_from_directory
@@ -26,11 +27,13 @@ DESKTOP_UA = (
 )
 DESKTOP_VIEWPORT = {"width": 1920, "height": 1080}
 
-_playwright = None
+# Playwright sync API must run outside Flask/gunicorn's asyncio loop.
+_playwright_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="playwright")
 _browser = None
+_playwright = None
 
 
-def get_browser():
+def _get_browser():
     global _playwright, _browser
     from playwright.sync_api import sync_playwright
 
@@ -43,12 +46,12 @@ def get_browser():
     return _browser
 
 
-def capture_screenshot(site):
+def _capture_screenshot_sync(site):
     filename = f"{site['id']}-{int(time.time() * 1000)}.png"
     filepath = SCREENSHOTS_DIR / filename
     url = site["url"]
 
-    browser = get_browser()
+    browser = _get_browser()
     context = browser.new_context(
         viewport=DESKTOP_VIEWPORT,
         device_scale_factor=1,
@@ -87,6 +90,11 @@ def capture_screenshot(site):
         "url": f"/screenshots/{filename}",
         "capturedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
+
+
+def capture_screenshot(site):
+    future = _playwright_executor.submit(_capture_screenshot_sync, site)
+    return future.result(timeout=180)
 
 
 @app.route("/health")
