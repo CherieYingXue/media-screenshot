@@ -5,6 +5,12 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+# Keep browsers inside the project so Render build artifacts include them.
+os.environ.setdefault(
+    "PLAYWRIGHT_BROWSERS_PATH",
+    str(Path(__file__).parent / "ms-playwright"),
+)
+
 from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder="public", static_url_path="")

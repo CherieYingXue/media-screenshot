@@ -1,4 +1,5 @@
 screenshots/
+ms-playwright/
 __pycache__/
 *.pyc
 .env
