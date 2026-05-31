@@ -1,0 +1,7 @@
+screenshots/
+__pycache__/
+*.pyc
+.git/
+start.bat
+README.md
+agent-tools/
