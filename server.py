@@ -32,57 +32,74 @@ DESKTOP_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
-DESKTOP_VIEWPORT = {"width": 1920, "height": 1080}
-BROWSER_ARGS = ["--disable-http2", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+# Half of full HD — faster capture and smaller images on Render free tier.
+DESKTOP_VIEWPORT = {"width": 960, "height": 540}
+BROWSER_ARGS = [
+    "--disable-http2",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--disable-extensions",
+]
+PAGE_TIMEOUT_MS = 45000
+PAGE_SETTLE_MS = 1500
+CAPTURE_TIMEOUT_SEC = 120
 
 _playwright_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="playwright")
 
 
-async def _capture_with_chromium(playwright, site, filepath):
-    browser = await playwright.chromium.launch(headless=True, args=BROWSER_ARGS)
-    context = await browser.new_context(
-        viewport=DESKTOP_VIEWPORT,
-        device_scale_factor=1,
-        user_agent=DESKTOP_UA,
-    )
-    page = await context.new_page()
-    try:
-        await page.goto(site["url"], wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(3000)
-        await page.screenshot(path=str(filepath), full_page=False)
-    finally:
-        await context.close()
-        await browser.close()
+class _BrowserPool:
+    """Reuse one Chromium instance inside the playwright worker thread."""
+
+    def __init__(self):
+        self._playwright = None
+        self._browser = None
+
+    async def capture(self, site, filepath):
+        from playwright.async_api import async_playwright
+
+        if self._browser is None or not self._browser.is_connected():
+            if self._playwright:
+                await self._playwright.stop()
+            self._playwright = await async_playwright().start()
+            self._browser = await self._playwright.chromium.launch(
+                headless=True,
+                args=BROWSER_ARGS,
+            )
+
+        context = await self._browser.new_context(
+            viewport=DESKTOP_VIEWPORT,
+            device_scale_factor=1,
+            user_agent=DESKTOP_UA,
+        )
+        page = await context.new_page()
+        try:
+
+            async def _route_handler(route):
+                if route.request.resource_type in ("media", "font"):
+                    await route.abort()
+                else:
+                    await route.continue_()
+
+            await page.route("**/*", _route_handler)
+            await page.goto(
+                site["url"],
+                wait_until="domcontentloaded",
+                timeout=PAGE_TIMEOUT_MS,
+            )
+            await page.wait_for_timeout(PAGE_SETTLE_MS)
+            await page.screenshot(path=str(filepath), full_page=False, type="jpeg", quality=80)
+        finally:
+            await context.close()
 
 
-async def _capture_with_firefox(playwright, site, filepath):
-    browser = await playwright.firefox.launch(headless=True)
-    context = await browser.new_context(viewport=DESKTOP_VIEWPORT, user_agent=DESKTOP_UA)
-    page = await context.new_page()
-    try:
-        await page.goto(site["url"], wait_until="domcontentloaded", timeout=60000)
-        await page.wait_for_timeout(3000)
-        await page.screenshot(path=str(filepath), full_page=False)
-    finally:
-        await context.close()
-        await browser.close()
+_browser_pool = _BrowserPool()
 
 
 async def _capture_screenshot_async(site):
-    from playwright.async_api import async_playwright
-
-    filename = f"{site['id']}-{int(time.time() * 1000)}.png"
+    filename = f"{site['id']}-{int(time.time() * 1000)}.jpg"
     filepath = SCREENSHOTS_DIR / filename
-
-    async with async_playwright() as playwright:
-        try:
-            await _capture_with_chromium(playwright, site, filepath)
-        except Exception as chromium_err:
-            try:
-                await _capture_with_firefox(playwright, site, filepath)
-            except Exception:
-                raise chromium_err
-
+    await _browser_pool.capture(site, filepath)
     return {
         "filename": filename,
         "url": f"/screenshots/{filename}",
@@ -102,7 +119,7 @@ def _run_async(coro):
 
 def capture_screenshot(site):
     future = _playwright_executor.submit(_run_async, _capture_screenshot_async(site))
-    return future.result(timeout=180)
+    return future.result(timeout=CAPTURE_TIMEOUT_SEC)
 
 
 @app.route("/health")
@@ -113,6 +130,16 @@ def health():
 @app.route("/")
 def index():
     return send_from_directory("public", "index.html")
+
+
+@app.route("/api/config")
+def api_config():
+    return jsonify(
+        {
+            "viewport": DESKTOP_VIEWPORT,
+            "format": "jpeg",
+        }
+    )
 
 
 @app.route("/api/sites")

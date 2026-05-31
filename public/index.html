@@ -14,25 +14,10 @@
       padding: 16px;
       padding-bottom: 32px;
     }
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    header h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #f8fafc;
-    }
-    header p {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      margin-top: 6px;
-    }
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 1.35rem; font-weight: 700; color: #f8fafc; }
+    header p { font-size: 0.8rem; color: #94a3b8; margin-top: 6px; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
     .capture-all {
       flex: 1;
       padding: 14px;
@@ -45,11 +30,14 @@
       cursor: pointer;
     }
     .capture-all:disabled { opacity: 0.6; cursor: wait; }
-    .sites {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    .progress {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 16px;
+      min-height: 1.2em;
     }
+    .sites { display: flex; flex-direction: column; gap: 16px; }
     .site-card {
       background: #1e293b;
       border-radius: 12px;
@@ -64,14 +52,8 @@
       gap: 10px;
       border-bottom: 1px solid #334155;
     }
-    .site-name {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-    .site-url {
-      font-size: 0.75rem;
-      color: #64748b;
-    }
+    .site-name { font-weight: 600; font-size: 0.95rem; }
+    .site-url { font-size: 0.75rem; color: #64748b; }
     .btn-capture {
       padding: 8px 16px;
       background: #22c55e;
@@ -85,13 +67,9 @@
       flex-shrink: 0;
     }
     .btn-capture:disabled { opacity: 0.5; cursor: wait; }
-    .site-preview {
-      padding: 10px;
-      background: #0f172a;
-    }
+    .site-preview { padding: 10px; background: #0f172a; }
     .img-wrap {
       overflow-x: auto;
-      overflow-y: hidden;
       border-radius: 8px;
       border: 1px solid #475569;
       background: #fff;
@@ -99,10 +77,8 @@
     }
     .site-preview img {
       display: block;
+      width: 100%;
       height: auto;
-      min-width: 100%;
-      width: 1920px;
-      max-width: none;
     }
     .site-preview .meta {
       font-size: 0.7rem;
@@ -161,10 +137,11 @@
 <body>
   <header>
     <h1>News Screenshots</h1>
-    <p>Desktop (PC) homepage views — 1920×1080</p>
+    <p id="viewportLabel">Desktop homepage — 960×540</p>
   </header>
 
-  <p class="hint">Swipe left/right on each image to see the full desktop layout</p>
+  <p class="hint">Sites load one at a time for faster, more reliable captures</p>
+  <p class="progress" id="progress"></p>
 
   <div class="toolbar">
     <button class="capture-all" id="captureAll">Refresh All Screenshots</button>
@@ -176,7 +153,9 @@
   <script>
     const sitesEl = document.getElementById('sites');
     const captureAllBtn = document.getElementById('captureAll');
+    const progressEl = document.getElementById('progress');
     const toast = document.getElementById('toast');
+    const CAPTURE_TIMEOUT_MS = 130000;
     let sites = [];
     let busy = false;
 
@@ -192,16 +171,26 @@
       document.querySelectorAll('.btn-capture').forEach((b) => (b.disabled = state));
     }
 
-    function showLoading(preview) {
-      preview.innerHTML = '<div class="loading"><div class="spinner"></div> Capturing desktop view…</div>';
+    function showLoading(preview, msg) {
+      preview.innerHTML = `<div class="loading"><div class="spinner"></div> ${msg || 'Capturing…'}</div>`;
     }
 
     function showImage(preview, data, name) {
       preview.innerHTML = `
         <div class="img-wrap">
-          <img src="${data.url}?t=${Date.now()}" alt="${name} desktop screenshot">
+          <img src="${data.url}?t=${Date.now()}" alt="${name} screenshot">
         </div>
-        <div class="meta">Desktop capture · ${new Date(data.capturedAt).toLocaleString()}</div>`;
+        <div class="meta">960×540 desktop · ${new Date(data.capturedAt).toLocaleString()}</div>`;
+    }
+
+    async function fetchWithTimeout(url, options = {}) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), CAPTURE_TIMEOUT_MS);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
     }
 
     function renderSites() {
@@ -217,7 +206,7 @@
             <button class="btn-capture" data-id="${s.id}">Refresh</button>
           </div>
           <div class="site-preview" id="preview-${s.id}">
-            <div class="loading"><div class="spinner"></div> Loading…</div>
+            <div class="loading"><div class="spinner"></div> Waiting…</div>
           </div>
         </div>`
         )
@@ -228,64 +217,55 @@
       });
     }
 
-    async function captureOne(id) {
-      if (busy) return;
-      setBusy(true);
+    async function captureOne(id, showProgress) {
       const site = sites.find((s) => s.id === id);
       const preview = document.getElementById(`preview-${id}`);
-      showLoading(preview);
+      showLoading(preview, `Capturing ${site.name}…`);
+      if (showProgress) progressEl.textContent = `Capturing ${site.name}…`;
 
-      try {
-        const res = await fetch(`/api/screenshot/${id}`, { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Capture failed');
-        showImage(preview, data, site.name);
-        showToast(`${site.name} updated`);
-      } catch (err) {
-        preview.innerHTML = `<div class="error-msg">${err.message}</div>`;
-      } finally {
-        setBusy(false);
-      }
+      const res = await fetchWithTimeout(`/api/screenshot/${id}`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Capture failed');
+      showImage(preview, data, site.name);
+      return data;
     }
 
-    async function captureAll() {
+    async function captureAllSequential() {
       if (busy) return;
       setBusy(true);
-      showToast('Capturing all desktop sites…');
+      showToast('Capturing sites one by one…');
 
+      let done = 0;
       for (const site of sites) {
-        showLoading(document.getElementById(`preview-${site.id}`));
-      }
-
-      try {
-        const res = await fetch('/api/screenshot-all', { method: 'POST' });
-        const data = await res.json();
-
-        for (const r of data.results) {
-          const preview = document.getElementById(`preview-${r.siteId}`);
-          if (r.ok) {
-            showImage(preview, r, r.site);
-          } else {
-            preview.innerHTML = `<div class="error-msg">${r.error}</div>`;
-          }
+        progressEl.textContent = `Capturing ${done + 1}/${sites.length}: ${site.name}…`;
+        const preview = document.getElementById(`preview-${site.id}`);
+        try {
+          await captureOne(site.id, false);
+          done += 1;
+        } catch (err) {
+          preview.innerHTML = `<div class="error-msg">${err.message}</div>`;
         }
-        showToast('All desktop screenshots ready');
-      } catch (err) {
-        showToast('Capture failed');
-      } finally {
-        setBusy(false);
       }
+
+      progressEl.textContent = `Done — ${done}/${sites.length} captured`;
+      showToast(`Finished (${done}/${sites.length})`);
+      setBusy(false);
     }
 
-    captureAllBtn.addEventListener('click', captureAll);
+    captureAllBtn.addEventListener('click', captureAllSequential);
 
-    fetch('/api/sites')
-      .then((r) => r.json())
-      .then((data) => {
-        sites = data;
-        renderSites();
-        captureAll();
-      });
+    Promise.all([
+      fetch('/api/sites').then((r) => r.json()),
+      fetch('/api/config').then((r) => r.json()).catch(() => null),
+    ]).then(([siteList, config]) => {
+      sites = siteList;
+      if (config?.viewport) {
+        document.getElementById('viewportLabel').textContent =
+          `Desktop homepage — ${config.viewport.width}×${config.viewport.height}`;
+      }
+      renderSites();
+      captureAllSequential();
+    });
   </script>
 </body>
 </html>
