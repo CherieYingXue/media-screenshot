@@ -1,8 +1,10 @@
 services:
   - type: web
     name: media-screenshot
-    runtime: docker
-    plan: starter
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && playwright install --with-deps chromium
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 300 server:app
     healthCheckPath: /health
     envVars:
       - key: PYTHONUNBUFFERED
