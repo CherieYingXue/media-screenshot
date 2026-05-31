@@ -1,3 +1,4 @@
+import asyncio
 import os
 import socket
 import time
@@ -26,64 +27,55 @@ DESKTOP_UA = (
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
 DESKTOP_VIEWPORT = {"width": 1920, "height": 1080}
+BROWSER_ARGS = ["--disable-http2", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
 
-# Playwright sync API must run outside Flask/gunicorn's asyncio loop.
 _playwright_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="playwright")
-_browser = None
-_playwright = None
 
 
-def _get_browser():
-    global _playwright, _browser
-    from playwright.sync_api import sync_playwright
-
-    if _browser is None or not _browser.is_connected():
-        _playwright = sync_playwright().start()
-        _browser = _playwright.chromium.launch(
-            headless=True,
-            args=["--disable-http2", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-        )
-    return _browser
-
-
-def _capture_screenshot_sync(site):
-    filename = f"{site['id']}-{int(time.time() * 1000)}.png"
-    filepath = SCREENSHOTS_DIR / filename
-    url = site["url"]
-
-    browser = _get_browser()
-    context = browser.new_context(
+async def _capture_with_chromium(playwright, site, filepath):
+    browser = await playwright.chromium.launch(headless=True, args=BROWSER_ARGS)
+    context = await browser.new_context(
         viewport=DESKTOP_VIEWPORT,
         device_scale_factor=1,
         user_agent=DESKTOP_UA,
     )
-    page = context.new_page()
+    page = await context.new_page()
     try:
-        page.goto(url, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(3000)
-        page.screenshot(path=str(filepath), full_page=False)
-    except Exception as chromium_err:
-        context.close()
-        from playwright.sync_api import sync_playwright
+        await page.goto(site["url"], wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(3000)
+        await page.screenshot(path=str(filepath), full_page=False)
+    finally:
+        await context.close()
+        await browser.close()
 
-        pw = sync_playwright().start()
+
+async def _capture_with_firefox(playwright, site, filepath):
+    browser = await playwright.firefox.launch(headless=True)
+    context = await browser.new_context(viewport=DESKTOP_VIEWPORT, user_agent=DESKTOP_UA)
+    page = await context.new_page()
+    try:
+        await page.goto(site["url"], wait_until="domcontentloaded", timeout=60000)
+        await page.wait_for_timeout(3000)
+        await page.screenshot(path=str(filepath), full_page=False)
+    finally:
+        await context.close()
+        await browser.close()
+
+
+async def _capture_screenshot_async(site):
+    from playwright.async_api import async_playwright
+
+    filename = f"{site['id']}-{int(time.time() * 1000)}.png"
+    filepath = SCREENSHOTS_DIR / filename
+
+    async with async_playwright() as playwright:
         try:
-            fx = pw.firefox.launch(headless=True)
-            fx_ctx = fx.new_context(viewport=DESKTOP_VIEWPORT, user_agent=DESKTOP_UA)
-            fx_page = fx_ctx.new_page()
+            await _capture_with_chromium(playwright, site, filepath)
+        except Exception as chromium_err:
             try:
-                fx_page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                fx_page.wait_for_timeout(3000)
-                fx_page.screenshot(path=str(filepath), full_page=False)
-            finally:
-                fx_ctx.close()
-                fx.close()
-        except Exception:
-            raise chromium_err
-        finally:
-            pw.stop()
-    else:
-        context.close()
+                await _capture_with_firefox(playwright, site, filepath)
+            except Exception:
+                raise chromium_err
 
     return {
         "filename": filename,
@@ -92,8 +84,18 @@ def _capture_screenshot_sync(site):
     }
 
 
+def _run_async(coro):
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+        asyncio.set_event_loop(None)
+
+
 def capture_screenshot(site):
-    future = _playwright_executor.submit(_capture_screenshot_sync, site)
+    future = _playwright_executor.submit(_run_async, _capture_screenshot_async(site))
     return future.result(timeout=180)
 
 
