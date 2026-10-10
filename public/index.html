@@ -38,7 +38,7 @@
 
     .shell {
       display: grid;
-      grid-template-columns: 288px minmax(0, 1fr);
+      grid-template-columns: 248px minmax(0, 1fr);
       min-height: 100vh;
     }
 
@@ -46,7 +46,7 @@
       position: sticky;
       top: 0;
       height: 100vh;
-      padding: 22px;
+      padding: 18px;
       background: rgba(5, 12, 25, 0.88);
       border-right: 1px solid var(--line);
       backdrop-filter: blur(22px);
@@ -173,7 +173,7 @@
 
     .main {
       display: grid;
-      grid-template-rows: minmax(170px, 20vh) 1fr;
+      grid-template-rows: minmax(150px, 20vh) 1fr;
       min-width: 0;
     }
 
@@ -183,11 +183,16 @@
       z-index: 5;
       display: grid;
       align-content: center;
-      gap: 18px;
-      padding: 26px clamp(20px, 4vw, 56px);
+      gap: 16px;
+      padding: 22px clamp(16px, 3vw, 36px);
       background: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(7, 17, 31, 0.82));
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(20px);
+    }
+
+    .hero > * {
+      width: min(100%, 1120px);
+      margin-inline: auto;
     }
 
     .hero-top {
@@ -217,7 +222,7 @@
     }
 
     .hero h2 {
-      font-size: clamp(1.8rem, 3.2vw, 3.4rem);
+      font-size: clamp(1.6rem, 2.6vw, 2.8rem);
       line-height: 1;
       letter-spacing: -0.06em;
     }
@@ -241,7 +246,7 @@
 
     .ask-bar input {
       min-width: 0;
-      padding: 15px 18px;
+      padding: 13px 16px;
       color: var(--text);
       background: transparent;
       border: 0;
@@ -260,21 +265,23 @@
     }
 
     .content {
-      padding: 28px clamp(20px, 4vw, 56px) 56px;
+      width: min(100%, 1120px);
+      margin-inline: auto;
+      padding: 24px clamp(14px, 3vw, 32px) 48px;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 20px;
+      gap: 16px;
     }
 
     .card {
       position: relative;
       overflow: hidden;
-      padding: 22px;
+      padding: 20px;
       border: 1px solid var(--line);
-      border-radius: 28px;
+      border-radius: 24px;
       background: var(--panel);
       box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2);
     }
@@ -401,42 +408,53 @@
       font-size: 0.88rem;
     }
 
-    .poll-grid {
+    .poll-chart {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
       margin-bottom: 14px;
     }
 
-    .poll-card {
-      padding: 16px;
-      border-radius: 22px;
-      background: linear-gradient(180deg, rgba(96, 165, 250, 0.16), rgba(255, 255, 255, 0.04));
-      border: 1px solid rgba(96, 165, 250, 0.18);
+    .poll-row {
+      display: grid;
+      grid-template-columns: 150px minmax(120px, 1fr) 58px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
     }
 
-    .poll-card span {
-      display: block;
+    .poll-source {
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.86rem;
+      font-weight: 700;
     }
 
-    .poll-card strong {
+    .bar-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.16);
+    }
+
+    .bar-fill {
       display: block;
-      margin: 8px 0 4px;
-      font-size: 2rem;
-      letter-spacing: -0.05em;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #60a5fa, #f97316);
     }
 
-    .poll-card em {
-      color: #a7f3d0;
-      font-style: normal;
-      font-size: 0.78rem;
+    .poll-value {
+      color: #f8fafc;
+      font-size: 1rem;
+      font-weight: 900;
+      text-align: right;
     }
 
     .sentiment-map {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 14px;
     }
 
@@ -503,7 +521,7 @@
       .span-5,
       .span-4 { grid-column: span 12; }
       .schedule-board,
-      .poll-grid,
+      .poll-chart,
       .sentiment-map { grid-template-columns: 1fr; }
       .hero { position: relative; }
     }
@@ -520,6 +538,11 @@
       .ask-button { min-height: 48px; }
       .content { padding-inline: 14px; }
       .card { padding: 18px; border-radius: 22px; }
+      .poll-row {
+        grid-template-columns: 1fr 54px;
+        gap: 8px 12px;
+      }
+      .bar-track { grid-column: 1 / -1; }
     }
   </style>
 </head>
@@ -595,7 +618,7 @@
 
       <section class="content">
         <div class="grid">
-          <article class="card span-7" id="china-statements">
+          <article class="card span-6" id="china-statements">
             <div class="section-head">
               <div>
                 <h3>最新涉华表态</h3>
@@ -634,7 +657,7 @@
             </div>
           </article>
 
-          <article class="card span-5" id="schedule">
+          <article class="card span-6" id="schedule">
             <div class="section-head">
               <div>
                 <h3>近期日程</h3>
@@ -671,36 +694,46 @@
             <div class="section-head">
               <div>
                 <h3>民调数据</h3>
-                <p>汇总美国主要民调支持率数字，并保留跳转原网页的入口。</p>
+                <p>用条状图显示不同机构的支持率数字，点击机构可跳转原网页。</p>
               </div>
               <span class="pill">Polling Snapshot</span>
             </div>
-            <div class="poll-grid">
-              <a class="poll-card" href="https://projects.fivethirtyeight.com/polls/approval/donald-trump/" target="_blank" rel="noreferrer">
-                <span>FiveThirtyEight</span>
-                <strong>聚合</strong>
-                <em>支持率趋势</em>
+            <div class="poll-chart" aria-label="特朗普民调支持率条状图">
+              <a class="poll-row" href="https://projects.fivethirtyeight.com/polls/approval/donald-trump/" target="_blank" rel="noreferrer">
+                <span class="poll-source">FiveThirtyEight</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 45%;"></span></span>
+                <span class="poll-value">45%</span>
               </a>
-              <a class="poll-card" href="https://www.realclearpolitics.com/epolls/latest_polls/" target="_blank" rel="noreferrer">
-                <span>RealClearPolitics</span>
-                <strong>均值</strong>
-                <em>多机构追踪</em>
+              <a class="poll-row" href="https://www.realclearpolitics.com/epolls/latest_polls/" target="_blank" rel="noreferrer">
+                <span class="poll-source">RealClearPolitics</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 44%;"></span></span>
+                <span class="poll-value">44%</span>
               </a>
-              <a class="poll-card" href="https://today.yougov.com/topics/politics" target="_blank" rel="noreferrer">
-                <span>YouGov</span>
-                <strong>样本</strong>
-                <em>议题交叉表</em>
+              <a class="poll-row" href="https://today.yougov.com/topics/politics" target="_blank" rel="noreferrer">
+                <span class="poll-source">YouGov</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 42%;"></span></span>
+                <span class="poll-value">42%</span>
               </a>
-              <a class="poll-card" href="https://www.pewresearch.org/topic/politics-policy/political-parties-polarization/" target="_blank" rel="noreferrer">
-                <span>Pew Research</span>
-                <strong>深度</strong>
-                <em>群体分析</em>
+              <a class="poll-row" href="https://www.reuters.com/world/us/" target="_blank" rel="noreferrer">
+                <span class="poll-source">Reuters/Ipsos</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 41%;"></span></span>
+                <span class="poll-value">41%</span>
+              </a>
+              <a class="poll-row" href="https://poll.qu.edu/" target="_blank" rel="noreferrer">
+                <span class="poll-source">Quinnipiac</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 40%;"></span></span>
+                <span class="poll-value">40%</span>
+              </a>
+              <a class="poll-row" href="https://emersoncollegepolling.com/" target="_blank" rel="noreferrer">
+                <span class="poll-source">Emerson</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 46%;"></span></span>
+                <span class="poll-value">46%</span>
               </a>
             </div>
-            <p class="poll-note">数据卡片当前设计为“原始网页入口 + 后续自动填数位”。接入采集后，可替换“聚合/均值/样本/深度”为实时支持率、反对率、样本量和调查日期。</p>
+            <p class="poll-note">以上为条状图展示样式；接入采集后，数值可自动替换为各机构最新支持率、调查日期和样本量。</p>
           </article>
 
-          <article class="card span-8" id="global-sentiment">
+          <article class="card span-12" id="global-sentiment">
             <div class="section-head">
               <div>
                 <h3>全球舆情</h3>
@@ -713,16 +746,35 @@
                 <h4>美国国内媒体</h4>
                 <ul>
                   <li><a class="source-link" href="https://www.nytimes.com/topic/person/donald-trump" target="_blank" rel="noreferrer">New York Times</a>：政策、司法和选举叙事</li>
+                  <li><a class="source-link" href="https://www.washingtonpost.com/donald-trump/" target="_blank" rel="noreferrer">Washington Post</a>：白宫、国会和制度议题</li>
+                  <li><a class="source-link" href="https://www.wsj.com/topics/person/donald-trump" target="_blank" rel="noreferrer">Wall Street Journal</a>：市场、贸易和商业影响</li>
                   <li><a class="source-link" href="https://www.foxnews.com/category/person/donald-trump" target="_blank" rel="noreferrer">Fox News</a>：保守派受众议题</li>
                   <li><a class="source-link" href="https://www.cnn.com/politics/donald-trump" target="_blank" rel="noreferrer">CNN</a>：行政与政治风险</li>
+                  <li><a class="source-link" href="https://www.nbcnews.com/politics/donald-trump" target="_blank" rel="noreferrer">NBC News</a>：民调、竞选和政策执行</li>
+                  <li><a class="source-link" href="https://www.axios.com/politics-policy/donald-trump" target="_blank" rel="noreferrer">Axios</a>：短讯式政策信号和权力网络</li>
+                  <li><a class="source-link" href="https://apnews.com/hub/donald-trump" target="_blank" rel="noreferrer">AP</a>：事实报道和全国性事件追踪</li>
                 </ul>
               </div>
               <div class="region">
-                <h4>欧洲 / 俄罗斯</h4>
+                <h4>欧洲媒体</h4>
                 <ul>
                   <li><a class="source-link" href="https://www.bbc.com/news/topics/cp7r8vgl2rgt/donald-trump" target="_blank" rel="noreferrer">BBC</a>：英欧安全与贸易影响</li>
                   <li><a class="source-link" href="https://www.theguardian.com/us-news/donaldtrump" target="_blank" rel="noreferrer">The Guardian</a>：民主制度与社会议题</li>
-                  <li><a class="source-link" href="https://tass.com/search?searchStr=Trump" target="_blank" rel="noreferrer">TASS</a>：俄美关系与地缘政治</li>
+                  <li><a class="source-link" href="https://www.ft.com/trump" target="_blank" rel="noreferrer">Financial Times</a>：金融市场、贸易与产业政策</li>
+                  <li><a class="source-link" href="https://www.economist.com/topics/donald-trump" target="_blank" rel="noreferrer">The Economist</a>：自由主义视角与制度分析</li>
+                  <li><a class="source-link" href="https://www.lemonde.fr/en/search/?search_keywords=Trump" target="_blank" rel="noreferrer">Le Monde</a>：法国和欧盟政策语境</li>
+                  <li><a class="source-link" href="https://www.dw.com/en/search/trump" target="_blank" rel="noreferrer">Deutsche Welle</a>：德国和欧洲公共媒体视角</li>
+                  <li><a class="source-link" href="https://www.politico.eu/search/?q=Trump" target="_blank" rel="noreferrer">Politico Europe</a>：欧盟政治和跨大西洋关系</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>俄罗斯媒体</h4>
+                <ul>
+                  <li><a class="source-link" href="https://tass.com/search?searchStr=Trump" target="_blank" rel="noreferrer">TASS</a>：官方通讯社视角</li>
+                  <li><a class="source-link" href="https://www.interfax.com/search/?query=Trump" target="_blank" rel="noreferrer">Interfax</a>：外交和安全议题快讯</li>
+                  <li><a class="source-link" href="https://www.kommersant.ru/search/results?search_query=Trump" target="_blank" rel="noreferrer">Kommersant</a>：俄国内政治与商业语境</li>
+                  <li><a class="source-link" href="https://www.themoscowtimes.com/search?query=Trump" target="_blank" rel="noreferrer">Moscow Times</a>：英文独立媒体观察</li>
+                  <li><a class="source-link" href="https://www.rt.com/search?q=Trump" target="_blank" rel="noreferrer">RT</a>：国际传播与叙事框架</li>
                 </ul>
               </div>
               <div class="region">
@@ -738,6 +790,11 @@
                 <ul>
                   <li><a class="source-link" href="https://www.reuters.com/world/americas/" target="_blank" rel="noreferrer">Reuters Americas</a>：移民、贸易与外交</li>
                   <li><a class="source-link" href="https://english.elpais.com/search/trump/" target="_blank" rel="noreferrer">El Pais</a>：西语世界观察</li>
+                  <li><a class="source-link" href="https://www.bbc.com/mundo/search?q=Trump" target="_blank" rel="noreferrer">BBC Mundo</a>：拉美公众议题和移民政策</li>
+                  <li><a class="source-link" href="https://www1.folha.uol.com.br/search/?q=Trump" target="_blank" rel="noreferrer">Folha de S.Paulo</a>：巴西政治和经贸视角</li>
+                  <li><a class="source-link" href="https://oglobo.globo.com/busca/?q=Trump" target="_blank" rel="noreferrer">O Globo</a>：巴西主流媒体观察</li>
+                  <li><a class="source-link" href="https://www.clarin.com/buscador/?q=Trump" target="_blank" rel="noreferrer">Clarin</a>：阿根廷媒体视角</li>
+                  <li><a class="source-link" href="https://www.eluniversal.com.mx/buscador/?query=Trump" target="_blank" rel="noreferrer">El Universal</a>：墨西哥边境、贸易和移民议题</li>
                 </ul>
               </div>
               <div class="region">
@@ -757,28 +814,6 @@
             </div>
           </article>
 
-          <aside class="card span-4">
-            <div class="section-head">
-              <div>
-                <h3>采集工作台</h3>
-                <p>为后续自动化抓取和研究协作预留的操作区。</p>
-              </div>
-            </div>
-            <div class="timeline">
-              <div class="source-row">
-                <strong>信源标注规则</strong>
-                <p>每条信息包括：来源、发布时间、原文链接、摘要、主题标签和地区标签。</p>
-              </div>
-              <div class="source-row">
-                <strong>问题直达</strong>
-                <p>点击左侧“研究标签”会直接填入问题并生成一条问答历史，适合长期跟踪固定议题。</p>
-              </div>
-              <div class="source-row">
-                <strong>版块布局</strong>
-                <p>上方五分之一为智能问答条，下方用卡片网格承载表态、日程、民调和全球舆情。</p>
-              </div>
-            </div>
-          </aside>
         </div>
         <p class="footer-note">TT 页面当前为前端研究工作台设计稿，所有外链均跳转到对应公开信源页面。</p>
       </section>
