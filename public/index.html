@@ -334,6 +334,108 @@
       white-space: nowrap;
     }
 
+    .tool-controls {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 0.7fr)) auto auto;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .tool-controls input,
+    .tool-controls select,
+    .research-notes {
+      width: 100%;
+      color: var(--text);
+      background: rgba(6, 13, 27, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      outline: 0;
+      font: inherit;
+    }
+
+    .tool-controls input,
+    .tool-controls select {
+      min-height: 44px;
+      padding: 0 12px;
+    }
+
+    .tool-button {
+      min-height: 44px;
+      padding: 0 14px;
+      color: var(--text);
+      background: rgba(96, 165, 250, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tool-button.secondary {
+      background: rgba(249, 115, 22, 0.15);
+      border-color: rgba(249, 115, 22, 0.28);
+    }
+
+    .tool-stats {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .results-list {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .result-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .result-card h4 {
+      font-size: 0.98rem;
+      color: #f8fafc;
+    }
+
+    .result-card p {
+      color: #b6c5d8;
+      font-size: 0.88rem;
+      line-height: 1.58;
+    }
+
+    .result-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .result-tags span {
+      padding: 4px 7px;
+      border-radius: 999px;
+      color: #c7d2fe;
+      background: rgba(99, 102, 241, 0.15);
+      font-size: 0.72rem;
+    }
+
+    .research-notes {
+      position: relative;
+      min-height: 92px;
+      padding: 12px;
+      resize: vertical;
+    }
+
     .timeline {
       position: relative;
       display: grid;
@@ -523,6 +625,8 @@
       .schedule-board,
       .poll-chart,
       .sentiment-map { grid-template-columns: 1fr; }
+      .tool-controls { grid-template-columns: 1fr 1fr; }
+      .tool-controls input { grid-column: 1 / -1; }
       .hero { position: relative; }
     }
 
@@ -543,6 +647,7 @@
         gap: 8px 12px;
       }
       .bar-track { grid-column: 1 / -1; }
+      .tool-controls { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -569,7 +674,7 @@
             <button class="tag-button" type="button" data-question="过去24小时特朗普有哪些涉华表态？">过去24小时涉华表态</button>
             <button class="tag-button" type="button" data-question="特朗普近期日程和到访地点有哪些？">近期日程与动向</button>
             <button class="tag-button" type="button" data-question="当前美国主要民调如何评价特朗普？">主要民调支持率</button>
-            <button class="tag-button" type="button" data-question="欧洲、俄罗斯、日本、韩国、拉美和中东媒体如何报道特朗普？">全球媒体舆情</button>
+            <button class="tag-button" type="button" data-question="全球主要地区和国家的主要媒体如何报道特朗普？">全球主要媒体报道</button>
             <button class="tag-button" type="button" data-question="中美经贸、关税和科技管制相关表态有什么变化？">中美经贸与科技</button>
           </div>
         </section>
@@ -604,7 +709,7 @@
             <h2>TT · 特朗普专题研究</h2>
           </div>
           <div class="hero-meta">
-            <div>自动采集位：涉华表态 / 日程 / 民调 / 全球舆情</div>
+            <div>研究工具：涉华表态 / 日程 / 民调 / 全球主要媒体报道</div>
             <div>更新节奏：24小时 · 近一周 · 更长周期</div>
           </div>
         </div>
@@ -618,6 +723,36 @@
 
       <section class="content">
         <div class="grid">
+          <article class="card span-12" id="research-tool">
+            <div class="section-head">
+              <div>
+                <h3>研究检索台</h3>
+                <p>可按关键词、地区、时间和主题筛选信源；问答结果、历史和笔记保存在本机浏览器。</p>
+              </div>
+              <span class="pill">Usable Research Tool</span>
+            </div>
+            <div class="tool-controls">
+              <input id="sourceSearch" type="search" placeholder="检索关键词：China、tariff、poll、Europe、移民、司法..." autocomplete="off">
+              <select id="regionFilter" aria-label="地区筛选">
+                <option value="all">全部地区</option>
+              </select>
+              <select id="timeFilter" aria-label="时间筛选">
+                <option value="all">全部时间</option>
+              </select>
+              <select id="topicFilter" aria-label="主题筛选">
+                <option value="all">全部主题</option>
+              </select>
+              <button class="tool-button" id="exportReport" type="button">导出摘要</button>
+              <button class="tool-button secondary" id="clearHistory" type="button">清空历史</button>
+            </div>
+            <div class="tool-stats">
+              <span id="matchCount">正在载入信源...</span>
+              <span id="activeFilters"></span>
+            </div>
+            <div class="results-list" id="sourceResults"></div>
+            <textarea class="research-notes" id="researchNotes" placeholder="研究笔记：可记录判断、待核实问题、交叉信源线索，内容自动保存在本机浏览器。"></textarea>
+          </article>
+
           <article class="card span-6" id="china-statements">
             <div class="section-head">
               <div>
@@ -736,14 +871,14 @@
           <article class="card span-12" id="global-sentiment">
             <div class="section-head">
               <div>
-                <h3>全球舆情</h3>
-                <p>覆盖美国国内主要媒体，以及美国和中国之外地区的主流媒体报道概览。</p>
+                <h3>全球主要媒体报道</h3>
+                <p>这里的“全球舆情”指全球主要地区和国家的主流媒体关于特朗普的报道，而不是泛泛的国际舆论。</p>
               </div>
-              <span class="pill">Global Media</span>
+              <span class="pill">Global Trump Coverage</span>
             </div>
             <div class="sentiment-map">
               <div class="region">
-                <h4>美国国内媒体</h4>
+                <h4>美国主要媒体对特朗普的报道</h4>
                 <ul>
                   <li><a class="source-link" href="https://www.nytimes.com/topic/person/donald-trump" target="_blank" rel="noreferrer">New York Times</a>：政策、司法和选举叙事</li>
                   <li><a class="source-link" href="https://www.washingtonpost.com/donald-trump/" target="_blank" rel="noreferrer">Washington Post</a>：白宫、国会和制度议题</li>
@@ -756,7 +891,7 @@
                 </ul>
               </div>
               <div class="region">
-                <h4>欧洲媒体</h4>
+                <h4>欧洲主要媒体对特朗普的报道</h4>
                 <ul>
                   <li><a class="source-link" href="https://www.bbc.com/news/topics/cp7r8vgl2rgt/donald-trump" target="_blank" rel="noreferrer">BBC</a>：英欧安全与贸易影响</li>
                   <li><a class="source-link" href="https://www.theguardian.com/us-news/donaldtrump" target="_blank" rel="noreferrer">The Guardian</a>：民主制度与社会议题</li>
@@ -768,7 +903,7 @@
                 </ul>
               </div>
               <div class="region">
-                <h4>俄罗斯媒体</h4>
+                <h4>俄罗斯主要媒体对特朗普的报道</h4>
                 <ul>
                   <li><a class="source-link" href="https://tass.com/search?searchStr=Trump" target="_blank" rel="noreferrer">TASS</a>：官方通讯社视角</li>
                   <li><a class="source-link" href="https://www.interfax.com/search/?query=Trump" target="_blank" rel="noreferrer">Interfax</a>：外交和安全议题快讯</li>
@@ -778,7 +913,7 @@
                 </ul>
               </div>
               <div class="region">
-                <h4>日本 / 韩国</h4>
+                <h4>日本 / 韩国主要媒体对特朗普的报道</h4>
                 <ul>
                   <li><a class="source-link" href="https://www3.nhk.or.jp/nhkworld/en/news/tags/80/" target="_blank" rel="noreferrer">NHK</a>：同盟、安全与经济议题</li>
                   <li><a class="source-link" href="https://www.japantimes.co.jp/tag/donald-trump/" target="_blank" rel="noreferrer">Japan Times</a>：区域影响分析</li>
@@ -786,7 +921,7 @@
                 </ul>
               </div>
               <div class="region">
-                <h4>拉美</h4>
+                <h4>拉美主要媒体对特朗普的报道</h4>
                 <ul>
                   <li><a class="source-link" href="https://www.reuters.com/world/americas/" target="_blank" rel="noreferrer">Reuters Americas</a>：移民、贸易与外交</li>
                   <li><a class="source-link" href="https://english.elpais.com/search/trump/" target="_blank" rel="noreferrer">El Pais</a>：西语世界观察</li>
@@ -798,7 +933,7 @@
                 </ul>
               </div>
               <div class="region">
-                <h4>中东</h4>
+                <h4>中东主要媒体对特朗普的报道</h4>
                 <ul>
                   <li><a class="source-link" href="https://www.aljazeera.com/tag/donald-trump/" target="_blank" rel="noreferrer">Al Jazeera</a>：地区冲突与外交政策</li>
                   <li><a class="source-link" href="https://www.thenationalnews.com/search/?query=Trump" target="_blank" rel="noreferrer">The National</a>：海湾国家视角</li>
@@ -815,7 +950,7 @@
           </article>
 
         </div>
-        <p class="footer-note">TT 页面当前为前端研究工作台设计稿，所有外链均跳转到对应公开信源页面。</p>
+        <p class="footer-note">TT 页面是可用的前端研究工具：支持本地检索、筛选、问答摘要、历史记录、研究笔记和导出；所有外链均跳转到对应公开信源页面。</p>
       </section>
     </main>
   </div>
@@ -829,22 +964,320 @@
     const answerPanel = document.getElementById('answerPanel');
     const historyList = document.getElementById('historyList');
     const moreHistory = document.getElementById('moreHistory');
+    const sourceSearch = document.getElementById('sourceSearch');
+    const regionFilter = document.getElementById('regionFilter');
+    const timeFilter = document.getElementById('timeFilter');
+    const topicFilter = document.getElementById('topicFilter');
+    const exportReport = document.getElementById('exportReport');
+    const clearHistory = document.getElementById('clearHistory');
+    const matchCount = document.getElementById('matchCount');
+    const activeFilters = document.getElementById('activeFilters');
+    const sourceResults = document.getElementById('sourceResults');
+    const researchNotes = document.getElementById('researchNotes');
+
+    const STORAGE_KEYS = {
+      history: 'tt-question-history',
+      notes: 'tt-research-notes',
+    };
+
+    const defaultHistory = [
+      '过去24小时涉华表态有哪些？',
+      '白宫今天的公开日程是什么？',
+      '摇摆州民调变化如何？',
+      '日本媒体近期报道重点？',
+      '关税政策最新说法？',
+      '俄媒如何解读其外交路线？',
+      '欧洲媒体报道倾向？',
+      '拉美媒体关注议题？',
+      '韩国媒体关键词？',
+      '美国国内媒体头条概览？',
+    ];
+
+    const researchItems = [
+      {
+        title: '白宫公开日程与声明',
+        source: 'White House',
+        region: '美国',
+        country: '美国',
+        time: '24小时',
+        topics: ['日程', '官方声明'],
+        url: 'https://www.whitehouse.gov/briefing-room/',
+        summary: '核验特朗普当日公开行程、声明、行政动作和白宫发布的正式文本。',
+      },
+      {
+        title: '涉华政策与美国政治快讯',
+        source: 'Reuters US',
+        region: '美国',
+        country: '美国',
+        time: '24小时',
+        topics: ['涉华表态', '贸易', '外交'],
+        url: 'https://www.reuters.com/world/us/',
+        summary: '跟踪特朗普涉华言论、贸易政策、对外政策和美国政治新闻。',
+      },
+      {
+        title: '特朗普专题事实报道',
+        source: 'Associated Press',
+        region: '美国',
+        country: '美国',
+        time: '近一周',
+        topics: ['综合报道', '司法', '选举'],
+        url: 'https://apnews.com/hub/donald-trump',
+        summary: '用于交叉核验美国国内事件、选举活动、司法进展和政策表述。',
+      },
+      {
+        title: '美国国内政治与政策叙事',
+        source: 'New York Times',
+        region: '美国',
+        country: '美国',
+        time: '近一周',
+        topics: ['政策', '司法', '选举'],
+        url: 'https://www.nytimes.com/topic/person/donald-trump',
+        summary: '观察自由派主流媒体关于特朗普政策、司法和制度风险的报道框架。',
+      },
+      {
+        title: '保守派媒体报道框架',
+        source: 'Fox News',
+        region: '美国',
+        country: '美国',
+        time: '近一周',
+        topics: ['国内政治', '选民基础', '媒体框架'],
+        url: 'https://www.foxnews.com/category/person/donald-trump',
+        summary: '观察保守派受众中关于特朗普的议题设置、政策强调和竞选叙事。',
+      },
+      {
+        title: '主要民调支持率趋势',
+        source: 'FiveThirtyEight',
+        region: '美国',
+        country: '美国',
+        time: '更长时间',
+        topics: ['民调', '支持率'],
+        url: 'https://projects.fivethirtyeight.com/polls/approval/donald-trump/',
+        summary: '查看不同机构民调的时间序列、支持率变化和样本背景。',
+      },
+      {
+        title: '欧洲公共媒体报道',
+        source: 'BBC',
+        region: '欧洲',
+        country: '英国',
+        time: '近一周',
+        topics: ['欧洲', '安全', '外交'],
+        url: 'https://www.bbc.com/news/topics/cp7r8vgl2rgt/donald-trump',
+        summary: '关注欧洲安全、英美关系、北约、贸易和跨大西洋议题中的特朗普报道。',
+      },
+      {
+        title: '欧洲商业与市场影响',
+        source: 'Financial Times',
+        region: '欧洲',
+        country: '英国',
+        time: '近一周',
+        topics: ['贸易', '金融市场', '产业政策'],
+        url: 'https://www.ft.com/trump',
+        summary: '用于研究特朗普政策对金融市场、关税、企业和全球供应链的影响。',
+      },
+      {
+        title: '欧盟政治观察',
+        source: 'Politico Europe',
+        region: '欧洲',
+        country: '欧盟',
+        time: '更长时间',
+        topics: ['欧盟', '外交', '安全'],
+        url: 'https://www.politico.eu/search/?q=Trump',
+        summary: '跟踪欧盟政治圈对特朗普外交路线、贸易政策和安全承诺的反应。',
+      },
+      {
+        title: '俄罗斯官方通讯社报道',
+        source: 'TASS',
+        region: '俄罗斯',
+        country: '俄罗斯',
+        time: '24小时',
+        topics: ['俄罗斯', '外交', '安全'],
+        url: 'https://tass.com/search?searchStr=Trump',
+        summary: '观察俄罗斯官方叙事如何报道特朗普及其对俄美关系的影响。',
+      },
+      {
+        title: '俄罗斯商业与政治语境',
+        source: 'Kommersant',
+        region: '俄罗斯',
+        country: '俄罗斯',
+        time: '近一周',
+        topics: ['俄罗斯', '商业', '地缘政治'],
+        url: 'https://www.kommersant.ru/search/results?search_query=Trump',
+        summary: '辅助识别俄罗斯国内政治和商业语境中关于特朗普的报道重点。',
+      },
+      {
+        title: '日本公共媒体观察',
+        source: 'NHK',
+        region: '亚洲',
+        country: '日本',
+        time: '近一周',
+        topics: ['日本', '同盟', '安全'],
+        url: 'https://www3.nhk.or.jp/nhkworld/en/news/tags/80/',
+        summary: '研究日本媒体如何报道特朗普对同盟、安全、贸易和区域秩序的影响。',
+      },
+      {
+        title: '韩国通讯社报道',
+        source: 'Yonhap',
+        region: '亚洲',
+        country: '韩国',
+        time: '近一周',
+        topics: ['韩国', '半岛安全', '同盟'],
+        url: 'https://en.yna.co.kr/search/index?query=Trump',
+        summary: '用于跟踪韩国媒体关于特朗普、半岛安全、韩美关系的报道。',
+      },
+      {
+        title: '拉美西语世界报道',
+        source: 'El Pais',
+        region: '拉美',
+        country: '西语地区',
+        time: '近一周',
+        topics: ['拉美', '移民', '外交'],
+        url: 'https://english.elpais.com/search/trump/',
+        summary: '观察拉美和西语世界对特朗普移民、贸易和外交政策的报道。',
+      },
+      {
+        title: '巴西主流媒体观察',
+        source: 'Folha de S.Paulo',
+        region: '拉美',
+        country: '巴西',
+        time: '更长时间',
+        topics: ['巴西', '贸易', '政治'],
+        url: 'https://www1.folha.uol.com.br/search/?q=Trump',
+        summary: '用于分析巴西媒体对特朗普经贸、外交和政治影响的报道。',
+      },
+      {
+        title: '中东地区报道',
+        source: 'Al Jazeera',
+        region: '中东',
+        country: '卡塔尔',
+        time: '近一周',
+        topics: ['中东', '冲突', '外交'],
+        url: 'https://www.aljazeera.com/tag/donald-trump/',
+        summary: '关注中东媒体如何报道特朗普在地区冲突、外交和美国政策中的角色。',
+      },
+      {
+        title: '总统讲话与历史档案',
+        source: 'American Presidency Project',
+        region: '美国',
+        country: '美国',
+        time: '更长时间',
+        topics: ['历史档案', '讲话', '涉华表态'],
+        url: 'https://www.presidency.ucsb.edu/advanced-search',
+        summary: '用于查找特朗普历史讲话、正式文本和政策表述，适合做长期口径对比。',
+      },
+    ];
+
+    function escapeHTML(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[char]));
+    }
+
+    function uniqueValues(key) {
+      return [...new Set(researchItems.map((item) => item[key]))].sort();
+    }
+
+    function uniqueTopics() {
+      return [...new Set(researchItems.flatMap((item) => item.topics))].sort();
+    }
+
+    function populateSelect(select, values) {
+      values.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    function matchesFilters(item) {
+      const query = sourceSearch.value.trim().toLowerCase();
+      const fields = [
+        item.title,
+        item.source,
+        item.region,
+        item.country,
+        item.time,
+        item.summary,
+        item.topics.join(' '),
+      ].join(' ').toLowerCase();
+
+      return (!query || fields.includes(query))
+        && (regionFilter.value === 'all' || item.region === regionFilter.value)
+        && (timeFilter.value === 'all' || item.time === timeFilter.value)
+        && (topicFilter.value === 'all' || item.topics.includes(topicFilter.value));
+    }
+
+    function currentMatches() {
+      return researchItems.filter(matchesFilters);
+    }
+
+    function renderSources() {
+      const matches = currentMatches();
+      matchCount.textContent = `匹配 ${matches.length} / ${researchItems.length} 个信源`;
+      activeFilters.textContent = [
+        regionFilter.value !== 'all' ? `地区：${regionFilter.value}` : '',
+        timeFilter.value !== 'all' ? `时间：${timeFilter.value}` : '',
+        topicFilter.value !== 'all' ? `主题：${topicFilter.value}` : '',
+        sourceSearch.value.trim() ? `关键词：${sourceSearch.value.trim()}` : '',
+      ].filter(Boolean).join(' · ');
+
+      sourceResults.innerHTML = matches.map((item) => `
+        <a class="result-card" href="${item.url}" target="_blank" rel="noreferrer">
+          <div class="meta-line"><span>${escapeHTML(item.region)}</span><span>${escapeHTML(item.country)}</span><span>${escapeHTML(item.time)}</span></div>
+          <h4>${escapeHTML(item.source)}｜${escapeHTML(item.title)}</h4>
+          <p>${escapeHTML(item.summary)}</p>
+          <div class="result-tags">${item.topics.map((topic) => `<span>${escapeHTML(topic)}</span>`).join('')}</div>
+        </a>
+      `).join('') || '<div class="result-card"><h4>没有匹配信源</h4><p>请减少筛选条件，或换一个关键词。</p></div>';
+    }
+
+    function loadHistory() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || 'null');
+      return Array.isArray(stored) && stored.length ? stored : defaultHistory;
+    }
+
+    function saveHistory(items) {
+      localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(items.slice(0, 30)));
+    }
+
+    function renderHistory() {
+      const history = loadHistory();
+      historyList.innerHTML = history.map((question, index) => `
+        <li class="${index >= 10 ? 'history-hidden' : ''}"><time>${index === 0 ? '最新' : index < 3 ? '近期' : '更早'}</time>${escapeHTML(question)}</li>
+      `).join('');
+    }
+
+    function addHistory(question) {
+      const history = loadHistory().filter((item) => item !== question);
+      history.unshift(question);
+      saveHistory(history);
+      renderHistory();
+    }
 
     function ask(question) {
       const text = question.trim();
       if (!text) return;
 
       questionInput.value = text;
-      answerPanel.innerHTML = `<strong>已接收问题：</strong>${text}<br>当前设计稿展示智能问答入口；接入检索接口后，这里将返回带信源链接的中文摘要。`;
-      answerPanel.classList.add('show');
+      sourceSearch.value = text;
+      regionFilter.value = 'all';
+      timeFilter.value = 'all';
+      topicFilter.value = 'all';
+      renderSources();
 
-      const li = document.createElement('li');
-      li.innerHTML = `<time>刚刚</time>${text}`;
-      historyList.prepend(li);
-      while (historyList.querySelectorAll('li:not(.history-hidden)').length > 10) {
-        const visibleItems = historyList.querySelectorAll('li:not(.history-hidden)');
-        visibleItems[visibleItems.length - 1].classList.add('history-hidden');
-      }
+      const matches = currentMatches().slice(0, 5);
+      const sourceList = matches.map((item) => `<li><a class="source-link" href="${item.url}" target="_blank" rel="noreferrer">${escapeHTML(item.source)}</a>：${escapeHTML(item.summary)}</li>`).join('');
+      answerPanel.innerHTML = `
+        <strong>问题：</strong>${escapeHTML(text)}<br>
+        <strong>检索摘要：</strong>在当前信源目录中匹配到 ${currentMatches().length} 条相关线索。建议优先核对官方文本、通讯社报道和地区主流媒体三类信源。
+        <ul style="margin: 8px 0 0 18px;">${sourceList || '<li>暂无直接匹配，请尝试更短关键词，例如 China、poll、Europe、tariff。</li>'}</ul>
+      `;
+      answerPanel.classList.add('show');
+      addHistory(text);
     }
 
     collapseSidebar.addEventListener('click', () => {
@@ -879,6 +1312,57 @@
       });
       moreHistory.textContent = shouldShow ? '收起' : '更多';
     });
+
+    [sourceSearch, regionFilter, timeFilter, topicFilter].forEach((control) => {
+      control.addEventListener('input', renderSources);
+      control.addEventListener('change', renderSources);
+    });
+
+    historyList.addEventListener('click', (event) => {
+      const item = event.target.closest('li');
+      if (item) ask(item.textContent.replace(/^(最新|近期|更早)/, '').trim());
+    });
+
+    clearHistory.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEYS.history);
+      renderHistory();
+    });
+
+    researchNotes.value = localStorage.getItem(STORAGE_KEYS.notes) || '';
+    researchNotes.addEventListener('input', () => {
+      localStorage.setItem(STORAGE_KEYS.notes, researchNotes.value);
+    });
+
+    exportReport.addEventListener('click', () => {
+      const matches = currentMatches();
+      const report = [
+        'TT 特朗普专题研究摘要',
+        `导出时间：${new Date().toLocaleString()}`,
+        `当前问题：${questionInput.value || '未输入'}`,
+        `匹配信源：${matches.length}`,
+        '',
+        '【匹配信源】',
+        ...matches.map((item, index) => `${index + 1}. ${item.source}｜${item.title}｜${item.region}/${item.country}｜${item.time}\n   ${item.summary}\n   ${item.url}`),
+        '',
+        '【问答历史】',
+        ...loadHistory().slice(0, 10).map((item, index) => `${index + 1}. ${item}`),
+        '',
+        '【研究笔记】',
+        researchNotes.value || '无',
+      ].join('\n');
+      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `tt-research-${Date.now()}.txt`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    populateSelect(regionFilter, uniqueValues('region'));
+    populateSelect(timeFilter, uniqueValues('time'));
+    populateSelect(topicFilter, uniqueTopics());
+    renderHistory();
+    renderSources();
   </script>
 </body>
 </html>
