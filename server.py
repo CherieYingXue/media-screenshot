@@ -1,7 +1,11 @@
 import asyncio
+import email.utils
 import os
 import socket
 import time
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -11,7 +15,7 @@ os.environ.setdefault(
     str(Path(__file__).parent / "ms-playwright"),
 )
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 PORT = int(os.environ.get("PORT", 3847))
@@ -44,6 +48,9 @@ BROWSER_ARGS = [
 PAGE_TIMEOUT_MS = 45000
 PAGE_SETTLE_MS = 1500
 CAPTURE_TIMEOUT_SEC = 120
+NEWS_TIMEOUT_SEC = 12
+NEWS_CACHE_TTL_SEC = 300
+NEWS_CACHE = {}
 
 _playwright_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="playwright")
 
@@ -122,9 +129,80 @@ def capture_screenshot(site):
     return future.result(timeout=CAPTURE_TIMEOUT_SEC)
 
 
+def _parse_rss_datetime(value):
+    try:
+        parsed = email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if not parsed:
+        return None
+    return parsed.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def fetch_google_news(query, limit=12):
+    query = (query or "Donald Trump").strip()[:180]
+    limit = max(1, min(int(limit or 12), 20))
+    cache_key = (query.lower(), limit)
+    cached = NEWS_CACHE.get(cache_key)
+    now = time.time()
+    if cached and now - cached["time"] < NEWS_CACHE_TTL_SEC:
+        return cached["items"]
+
+    params = urllib.parse.urlencode(
+        {
+            "q": query,
+            "hl": "en-US",
+            "gl": "US",
+            "ceid": "US:en",
+        }
+    )
+    url = f"https://news.google.com/rss/search?{params}"
+    req = urllib.request.Request(url, headers={"User-Agent": DESKTOP_UA})
+    with urllib.request.urlopen(req, timeout=NEWS_TIMEOUT_SEC) as response:
+        xml_body = response.read()
+
+    root = ET.fromstring(xml_body)
+    items = []
+    for item in root.findall("./channel/item")[:limit]:
+        title = item.findtext("title", default="").strip()
+        link = item.findtext("link", default="").strip()
+        source = item.findtext("source", default="Google News").strip()
+        published = _parse_rss_datetime(item.findtext("pubDate", default=""))
+        if title and link:
+            items.append(
+                {
+                    "title": title,
+                    "url": link,
+                    "source": source or "Google News",
+                    "publishedAt": published,
+                }
+            )
+
+    NEWS_CACHE[cache_key] = {"time": now, "items": items}
+    return items
+
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
+
+
+@app.route("/api/research/news")
+def research_news():
+    query = request.args.get("q", "Donald Trump")
+    limit = request.args.get("limit", 12)
+    try:
+        items = fetch_google_news(query, limit)
+        return jsonify(
+            {
+                "query": query,
+                "count": len(items),
+                "results": items,
+                "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch live news: {e}"}), 502
 
 
 @app.route("/")

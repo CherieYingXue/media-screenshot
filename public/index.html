@@ -337,7 +337,7 @@
     .tool-controls {
       position: relative;
       display: grid;
-      grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 0.7fr)) auto auto;
+      grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 0.7fr)) auto auto auto;
       gap: 10px;
       margin-bottom: 16px;
     }
@@ -857,14 +857,17 @@
               <select id="topicFilter" aria-label="主题筛选">
                 <option value="all">全部主题</option>
               </select>
+              <button class="tool-button" id="refreshLive" type="button">刷新实时新闻</button>
               <button class="tool-button" id="exportReport" type="button">导出摘要</button>
               <button class="tool-button secondary" id="clearHistory" type="button">清空历史</button>
             </div>
             <div class="tool-stats">
               <span id="matchCount">正在载入信源...</span>
               <span id="activeFilters"></span>
+              <span id="liveStatus">实时新闻待刷新</span>
             </div>
             <div class="results-list" id="sourceResults"></div>
+            <div class="results-list" id="liveNewsResults" aria-live="polite"></div>
             <textarea class="research-notes" id="researchNotes" placeholder="研究笔记：可记录判断、待核实问题、交叉信源线索，内容自动保存在本机浏览器。"></textarea>
           </article>
 
@@ -968,11 +971,14 @@
     const regionFilter = document.getElementById('regionFilter');
     const timeFilter = document.getElementById('timeFilter');
     const topicFilter = document.getElementById('topicFilter');
+    const refreshLive = document.getElementById('refreshLive');
     const exportReport = document.getElementById('exportReport');
     const clearHistory = document.getElementById('clearHistory');
     const matchCount = document.getElementById('matchCount');
     const activeFilters = document.getElementById('activeFilters');
+    const liveStatus = document.getElementById('liveStatus');
     const sourceResults = document.getElementById('sourceResults');
+    const liveNewsResults = document.getElementById('liveNewsResults');
     const researchNotes = document.getElementById('researchNotes');
 
     const STORAGE_KEYS = {
@@ -1235,6 +1241,34 @@
       `).join('') || '<div class="result-card"><h4>没有匹配信源</h4><p>请减少筛选条件，或换一个关键词。</p></div>';
     }
 
+    function liveQueryText() {
+      return questionInput.value.trim()
+        || sourceSearch.value.trim()
+        || 'Donald Trump China poll global media';
+    }
+
+    async function refreshLiveNews() {
+      const query = liveQueryText();
+      liveStatus.textContent = `实时新闻检索中：${query}`;
+      liveNewsResults.innerHTML = '<div class="result-card"><h4>正在抓取实时新闻...</h4><p>从后端新闻检索 API 获取公开网络结果。</p></div>';
+      try {
+        const response = await fetch(`/api/research/news?q=${encodeURIComponent(query)}&limit=9`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || '实时新闻检索失败');
+        liveStatus.textContent = `实时新闻：${data.count} 条 · ${new Date(data.updatedAt).toLocaleString()}`;
+        liveNewsResults.innerHTML = data.results.map((item) => `
+          <a class="result-card" href="${item.url}" target="_blank" rel="noreferrer">
+            <div class="meta-line"><span>实时新闻</span><span>${escapeHTML(item.source)}</span><span>${item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '时间待核验'}</span></div>
+            <h4>${escapeHTML(item.title)}</h4>
+            <p>点击打开原网页或 Google News 聚合页，继续核验原始报道。</p>
+          </a>
+        `).join('') || '<div class="result-card"><h4>没有实时结果</h4><p>请尝试更短关键词，例如 Donald Trump China。</p></div>';
+      } catch (error) {
+        liveStatus.textContent = '实时新闻暂不可用';
+        liveNewsResults.innerHTML = `<div class="result-card"><h4>实时新闻检索失败</h4><p>${escapeHTML(error.message)}。静态信源检索仍可继续使用。</p></div>`;
+      }
+    }
+
     function loadHistory() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || 'null');
       return Array.isArray(stored) && stored.length ? stored : defaultHistory;
@@ -1278,6 +1312,7 @@
       `;
       answerPanel.classList.add('show');
       addHistory(text);
+      refreshLiveNews();
     }
 
     collapseSidebar.addEventListener('click', () => {
@@ -1328,6 +1363,8 @@
       renderHistory();
     });
 
+    refreshLive.addEventListener('click', refreshLiveNews);
+
     researchNotes.value = localStorage.getItem(STORAGE_KEYS.notes) || '';
     researchNotes.addEventListener('input', () => {
       localStorage.setItem(STORAGE_KEYS.notes, researchNotes.value);
@@ -1340,6 +1377,7 @@
         `导出时间：${new Date().toLocaleString()}`,
         `当前问题：${questionInput.value || '未输入'}`,
         `匹配信源：${matches.length}`,
+        `实时新闻状态：${liveStatus.textContent}`,
         '',
         '【匹配信源】',
         ...matches.map((item, index) => `${index + 1}. ${item.source}｜${item.title}｜${item.region}/${item.country}｜${item.time}\n   ${item.summary}\n   ${item.url}`),
