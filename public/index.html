@@ -723,36 +723,6 @@
 
       <section class="content">
         <div class="grid">
-          <article class="card span-12" id="research-tool">
-            <div class="section-head">
-              <div>
-                <h3>研究检索台</h3>
-                <p>可按关键词、地区、时间和主题筛选信源；问答结果、历史和笔记保存在本机浏览器。</p>
-              </div>
-              <span class="pill">Usable Research Tool</span>
-            </div>
-            <div class="tool-controls">
-              <input id="sourceSearch" type="search" placeholder="检索关键词：China、tariff、poll、Europe、移民、司法..." autocomplete="off">
-              <select id="regionFilter" aria-label="地区筛选">
-                <option value="all">全部地区</option>
-              </select>
-              <select id="timeFilter" aria-label="时间筛选">
-                <option value="all">全部时间</option>
-              </select>
-              <select id="topicFilter" aria-label="主题筛选">
-                <option value="all">全部主题</option>
-              </select>
-              <button class="tool-button" id="exportReport" type="button">导出摘要</button>
-              <button class="tool-button secondary" id="clearHistory" type="button">清空历史</button>
-            </div>
-            <div class="tool-stats">
-              <span id="matchCount">正在载入信源...</span>
-              <span id="activeFilters"></span>
-            </div>
-            <div class="results-list" id="sourceResults"></div>
-            <textarea class="research-notes" id="researchNotes" placeholder="研究笔记：可记录判断、待核实问题、交叉信源线索，内容自动保存在本机浏览器。"></textarea>
-          </article>
-
           <article class="card span-6" id="china-statements">
             <div class="section-head">
               <div>
@@ -866,6 +836,36 @@
               </a>
             </div>
             <p class="poll-note">以上为条状图展示样式；接入采集后，数值可自动替换为各机构最新支持率、调查日期和样本量。</p>
+          </article>
+
+          <article class="card span-12" id="research-tool">
+            <div class="section-head">
+              <div>
+                <h3>研究检索台</h3>
+                <p>可按关键词、地区、时间和主题筛选信源；问答结果、历史和笔记保存在本机浏览器。</p>
+              </div>
+              <span class="pill">Usable Research Tool</span>
+            </div>
+            <div class="tool-controls">
+              <input id="sourceSearch" type="search" placeholder="检索关键词：China、tariff、poll、Europe、移民、司法..." autocomplete="off">
+              <select id="regionFilter" aria-label="地区筛选">
+                <option value="all">全部地区</option>
+              </select>
+              <select id="timeFilter" aria-label="时间筛选">
+                <option value="all">全部时间</option>
+              </select>
+              <select id="topicFilter" aria-label="主题筛选">
+                <option value="all">全部主题</option>
+              </select>
+              <button class="tool-button" id="exportReport" type="button">导出摘要</button>
+              <button class="tool-button secondary" id="clearHistory" type="button">清空历史</button>
+            </div>
+            <div class="tool-stats">
+              <span id="matchCount">正在载入信源...</span>
+              <span id="activeFilters"></span>
+            </div>
+            <div class="results-list" id="sourceResults"></div>
+            <textarea class="research-notes" id="researchNotes" placeholder="研究笔记：可记录判断、待核实问题、交叉信源线索，内容自动保存在本机浏览器。"></textarea>
           </article>
 
           <article class="card span-12" id="global-sentiment">
