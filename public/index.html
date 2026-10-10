@@ -1,270 +1,883 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>News Screenshots — Desktop</title>
+  <title>TT | 特朗普专题研究</title>
   <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(14, 24, 43, 0.86);
+      --panel-strong: rgba(18, 32, 56, 0.96);
+      --line: rgba(148, 163, 184, 0.18);
+      --muted: #8ea0ba;
+      --text: #edf4ff;
+      --accent: #60a5fa;
+      --accent-2: #f97316;
+      --green: #34d399;
+      --red: #fb7185;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
       min-height: 100vh;
-      padding: 16px;
-      padding-bottom: 32px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(59, 130, 246, 0.22), transparent 28%),
+        radial-gradient(circle at 86% 8%, rgba(249, 115, 22, 0.2), transparent 26%),
+        linear-gradient(135deg, #050914 0%, var(--bg) 48%, #0c1526 100%);
+      overflow-x: hidden;
     }
-    header { text-align: center; margin-bottom: 20px; }
-    header h1 { font-size: 1.35rem; font-weight: 700; color: #f8fafc; }
-    header p { font-size: 0.8rem; color: #94a3b8; margin-top: 6px; }
-    .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
-    .capture-all {
-      flex: 1;
-      padding: 14px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
     }
-    .capture-all:disabled { opacity: 0.6; cursor: wait; }
-    .progress {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #94a3b8;
-      margin-bottom: 16px;
-      min-height: 1.2em;
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 18px;
+      background: rgba(5, 12, 25, 0.88);
+      border-right: 1px solid var(--line);
+      backdrop-filter: blur(22px);
+      transition: width 0.25s ease, padding 0.25s ease, transform 0.25s ease;
+      z-index: 10;
+      overflow-y: auto;
     }
-    .sites { display: flex; flex-direction: column; gap: 16px; }
-    .site-card {
-      background: #1e293b;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #334155;
-    }
-    .site-header {
+
+    .shell.collapsed { grid-template-columns: 74px minmax(0, 1fr); }
+    .shell.collapsed .sidebar { padding: 18px 12px; }
+    .shell.collapsed .sidebar-content,
+    .shell.collapsed .brand-copy,
+    .shell.collapsed .collapse-label { display: none; }
+
+    .brand {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      gap: 10px;
-      border-bottom: 1px solid #334155;
+      gap: 12px;
+      margin-bottom: 24px;
     }
-    .site-name { font-weight: 600; font-size: 0.95rem; }
-    .site-url { font-size: 0.75rem; color: #64748b; }
-    .btn-capture {
-      padding: 8px 16px;
-      background: #22c55e;
-      color: #052e16;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #2563eb, #f97316);
+      box-shadow: 0 12px 36px rgba(37, 99, 235, 0.36);
+      font-weight: 900;
+      letter-spacing: -0.08em;
+    }
+
+    .brand h1 { font-size: 1.05rem; letter-spacing: 0.01em; }
+    .brand p { margin-top: 2px; color: var(--muted); font-size: 0.76rem; }
+
+    .icon-button,
+    .tag-button,
+    .ask-button,
+    .more-button {
+      border: 0;
       cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
+      color: var(--text);
+      font: inherit;
     }
-    .btn-capture:disabled { opacity: 0.5; cursor: wait; }
-    .site-preview { padding: 10px; background: #0f172a; }
-    .img-wrap {
-      overflow-x: auto;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background: #fff;
-      -webkit-overflow-scrolling: touch;
+
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      margin-bottom: 22px;
+      border-radius: 14px;
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid var(--line);
     }
-    .site-preview img {
-      display: block;
+
+    .sidebar-section {
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(15, 23, 42, 0.64);
+    }
+
+    .sidebar-section h2 {
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tag-list { display: grid; gap: 9px; }
+
+    .tag-button {
       width: 100%;
-      height: auto;
+      padding: 10px 12px;
+      text-align: left;
+      border-radius: 14px;
+      background: rgba(37, 99, 235, 0.13);
+      border: 1px solid rgba(96, 165, 250, 0.22);
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
     }
-    .site-preview .meta {
-      font-size: 0.7rem;
-      color: #64748b;
-      margin-top: 8px;
-      text-align: center;
+
+    .tag-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(96, 165, 250, 0.6);
+      background: rgba(37, 99, 235, 0.22);
     }
-    .loading {
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+      list-style: none;
+      color: #dbeafe;
+      font-size: 0.86rem;
+    }
+
+    .history-list li {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .history-list time {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .history-hidden { display: none; }
+
+    .more-button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 9px 12px;
+      border-radius: 13px;
+      background: rgba(249, 115, 22, 0.16);
+      border: 1px solid rgba(249, 115, 22, 0.28);
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: minmax(150px, 20vh) 1fr;
+      min-width: 0;
+    }
+
+    .hero {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: grid;
+      align-content: center;
+      gap: 16px;
+      padding: 22px clamp(16px, 3vw, 36px);
+      background: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(7, 17, 31, 0.82));
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(20px);
+    }
+
+    .hero > * {
+      width: min(100%, 1120px);
+      margin-inline: auto;
+    }
+
+    .hero-top {
       display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
-      padding: 48px 24px;
-      color: #94a3b8;
-      font-size: 0.85rem;
-    }
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #334155;
-      border-top-color: #3b82f6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .error-msg {
-      color: #f87171;
+      margin-bottom: 8px;
+      color: #bfdbfe;
       font-size: 0.8rem;
-      padding: 16px;
-      text-align: center;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
-    .hint {
-      font-size: 0.75rem;
-      color: #64748b;
-      text-align: center;
-      margin-bottom: 16px;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 20px var(--green);
     }
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #334155;
-      color: #f1f5f9;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      opacity: 0;
-      transition: opacity 0.3s;
+
+    .hero h2 {
+      font-size: clamp(1.6rem, 2.6vw, 2.8rem);
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+
+    .hero-meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: right;
+    }
+
+    .ask-bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 8px;
+      border: 1px solid rgba(96, 165, 250, 0.32);
+      border-radius: 24px;
+      background: rgba(15, 23, 42, 0.82);
+      box-shadow: var(--shadow);
+    }
+
+    .ask-bar input {
+      min-width: 0;
+      padding: 13px 16px;
+      color: var(--text);
+      background: transparent;
+      border: 0;
+      outline: 0;
+      font-size: 1rem;
+    }
+
+    .ask-bar input::placeholder { color: #718096; }
+
+    .ask-button {
+      padding: 0 22px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #2563eb, #f97316);
+      font-weight: 800;
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.26);
+    }
+
+    .content {
+      width: min(100%, 1120px);
+      margin-inline: auto;
+      padding: 24px clamp(14px, 3vw, 32px) 48px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
       pointer-events: none;
-      z-index: 100;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 32%);
     }
-    .toast.show { opacity: 1; }
+
+    .span-8 { grid-column: span 8; }
+    .span-7 { grid-column: span 7; }
+    .span-6 { grid-column: span 6; }
+    .span-5 { grid-column: span 5; }
+    .span-4 { grid-column: span 4; }
+    .span-12 { grid-column: span 12; }
+
+    .section-head {
+      position: relative;
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-head h3 {
+      font-size: 1.16rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-head p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: #dbeafe;
+      background: rgba(96, 165, 250, 0.15);
+      border: 1px solid rgba(96, 165, 250, 0.26);
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 14px;
+    }
+
+    .timeline-item,
+    .source-row {
+      position: relative;
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .timeline-item strong,
+    .source-row strong {
+      color: #f8fafc;
+      font-size: 0.96rem;
+    }
+
+    .timeline-item p,
+    .source-row p,
+    .poll-note {
+      color: #b6c5d8;
+      line-height: 1.65;
+      font-size: 0.9rem;
+    }
+
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .source-link {
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    .source-link:hover { text-decoration: underline; }
+
+    .schedule-board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .schedule-card {
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(6, 13, 27, 0.58);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .schedule-card b {
+      display: block;
+      margin-bottom: 10px;
+      color: #fef3c7;
+    }
+
+    .schedule-card ul {
+      display: grid;
+      gap: 10px;
+      padding-left: 17px;
+      color: #cbd5e1;
+      line-height: 1.55;
+      font-size: 0.88rem;
+    }
+
+    .poll-chart {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .poll-row {
+      display: grid;
+      grid-template-columns: 150px minmax(120px, 1fr) 58px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .poll-source {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .bar-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.16);
+    }
+
+    .bar-fill {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #60a5fa, #f97316);
+    }
+
+    .poll-value {
+      color: #f8fafc;
+      font-size: 1rem;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .sentiment-map {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .region {
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .region h4 { margin-bottom: 10px; }
+
+    .region ul {
+      display: grid;
+      gap: 11px;
+      list-style: none;
+      color: #cbd5e1;
+      font-size: 0.88rem;
+      line-height: 1.58;
+    }
+
+    .region li::before {
+      content: "•";
+      margin-right: 8px;
+      color: var(--accent-2);
+    }
+
+    .answer-panel {
+      display: none;
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      color: #dbeafe;
+      background: rgba(37, 99, 235, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.24);
+      line-height: 1.6;
+    }
+
+    .answer-panel.show { display: block; }
+
+    .footer-note {
+      margin-top: 24px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 1100px) {
+      .shell,
+      .shell.collapsed { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        width: min(320px, 90vw);
+        transform: translateX(-102%);
+      }
+      .shell.sidebar-open .sidebar { transform: translateX(0); }
+      .shell.collapsed .sidebar-content,
+      .shell.collapsed .brand-copy,
+      .shell.collapsed .collapse-label { display: block; }
+      .mobile-menu { display: inline-grid; }
+      .span-8,
+      .span-7,
+      .span-6,
+      .span-5,
+      .span-4 { grid-column: span 12; }
+      .schedule-board,
+      .poll-chart,
+      .sentiment-map { grid-template-columns: 1fr; }
+      .hero { position: relative; }
+    }
+
+    @media (min-width: 1101px) {
+      .mobile-menu { display: none; }
+    }
+
+    @media (max-width: 680px) {
+      .main { grid-template-rows: auto 1fr; }
+      .hero-top { align-items: start; flex-direction: column; }
+      .hero-meta { text-align: left; }
+      .ask-bar { grid-template-columns: 1fr; border-radius: 22px; }
+      .ask-button { min-height: 48px; }
+      .content { padding-inline: 14px; }
+      .card { padding: 18px; border-radius: 22px; }
+      .poll-row {
+        grid-template-columns: 1fr 54px;
+        gap: 8px 12px;
+      }
+      .bar-track { grid-column: 1 / -1; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>News Screenshots</h1>
-    <p id="viewportLabel">Desktop homepage — 960×540</p>
-  </header>
+  <div class="shell" id="shell">
+    <aside class="sidebar" aria-label="研究功能栏目">
+      <button class="icon-button" id="collapseSidebar" type="button" aria-label="隐藏或展开左侧栏目">
+        <span class="collapse-label">收起</span>
+        <span aria-hidden="true">☰</span>
+      </button>
 
-  <p class="hint">Sites load one at a time for faster, more reliable captures</p>
-  <p class="progress" id="progress"></p>
+      <div class="brand">
+        <div class="logo">TT</div>
+        <div class="brand-copy">
+          <h1>特朗普专题</h1>
+          <p>研究标签 · 问答历史 · 信源追踪</p>
+        </div>
+      </div>
 
-  <div class="toolbar">
-    <button class="capture-all" id="captureAll">Refresh All Screenshots</button>
+      <div class="sidebar-content">
+        <section class="sidebar-section">
+          <h2>研究标签</h2>
+          <div class="tag-list">
+            <button class="tag-button" type="button" data-question="过去24小时特朗普有哪些涉华表态？">过去24小时涉华表态</button>
+            <button class="tag-button" type="button" data-question="特朗普近期日程和到访地点有哪些？">近期日程与动向</button>
+            <button class="tag-button" type="button" data-question="当前美国主要民调如何评价特朗普？">主要民调支持率</button>
+            <button class="tag-button" type="button" data-question="欧洲、俄罗斯、日本、韩国、拉美和中东媒体如何报道特朗普？">全球媒体舆情</button>
+            <button class="tag-button" type="button" data-question="中美经贸、关税和科技管制相关表态有什么变化？">中美经贸与科技</button>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <h2>问答历史</h2>
+          <ul class="history-list" id="historyList">
+            <li><time>09:42</time>过去24小时涉华表态有哪些？</li>
+            <li><time>09:18</time>白宫今天的公开日程是什么？</li>
+            <li><time>昨天</time>摇摆州民调变化如何？</li>
+            <li><time>昨天</time>日本媒体近期报道重点？</li>
+            <li><time>周三</time>关税政策最新说法？</li>
+            <li><time>周三</time>俄媒如何解读其外交路线？</li>
+            <li><time>周二</time>欧洲媒体报道倾向？</li>
+            <li><time>周二</time>拉美媒体关注议题？</li>
+            <li><time>周一</time>韩国媒体关键词？</li>
+            <li><time>周一</time>美国国内媒体头条概览？</li>
+            <li class="history-hidden"><time>更早</time>中东媒体报道脉络？</li>
+            <li class="history-hidden"><time>更早</time>科技企业政策信号？</li>
+          </ul>
+          <button class="more-button" id="moreHistory" type="button">更多</button>
+        </section>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <div class="hero-top">
+          <button class="icon-button mobile-menu" id="mobileMenu" type="button" aria-label="打开左侧栏目">☰</button>
+          <div>
+            <div class="eyebrow"><span class="dot"></span> TT Intelligence Desk</div>
+            <h2>TT · 特朗普专题研究</h2>
+          </div>
+          <div class="hero-meta">
+            <div>自动采集位：涉华表态 / 日程 / 民调 / 全球舆情</div>
+            <div>更新节奏：24小时 · 近一周 · 更长周期</div>
+          </div>
+        </div>
+
+        <form class="ask-bar" id="askForm">
+          <input id="questionInput" type="search" placeholder="输入想问的问题，例如：过去一周特朗普关于中国说了什么？" autocomplete="off">
+          <button class="ask-button" type="submit">智能问答</button>
+        </form>
+        <div class="answer-panel" id="answerPanel"></div>
+      </header>
+
+      <section class="content">
+        <div class="grid">
+          <article class="card span-6" id="china-statements">
+            <div class="section-head">
+              <div>
+                <h3>最新涉华表态</h3>
+                <p>按过去24小时、近一周和更长时间组织，用于承接网络采集结果。</p>
+              </div>
+              <span class="pill">China Watch</span>
+            </div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="meta-line"><span>过去24小时</span><span>待接入实时抓取</span></div>
+                <strong>涉华贸易、关税、科技竞争相关表态入口</strong>
+                <p>页面为实时采集留出摘要位，可在此显示原文摘录、中文摘要、情绪标签和事实核验提示。</p>
+                <div class="meta-line">信源：
+                  <a class="source-link" href="https://www.whitehouse.gov/briefing-room/" target="_blank" rel="noreferrer">白宫简报室</a>
+                  <a class="source-link" href="https://www.reuters.com/world/us/" target="_blank" rel="noreferrer">Reuters US</a>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="meta-line"><span>近一周</span><span>竞选/行政讲话 · 采访 · 社媒</span></div>
+                <strong>中美关系、对华政策和产业政策表态归档</strong>
+                <p>以时间线呈现多信源报道，并标注“直接引语”“转述报道”“评论分析”等类型。</p>
+                <div class="meta-line">信源：
+                  <a class="source-link" href="https://apnews.com/hub/donald-trump" target="_blank" rel="noreferrer">AP Trump Hub</a>
+                  <a class="source-link" href="https://www.politico.com/news/donald-trump" target="_blank" rel="noreferrer">Politico</a>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="meta-line"><span>更长时间</span><span>政策演变</span></div>
+                <strong>历史表态对照：贸易、台湾、TikTok、芯片与盟友政策</strong>
+                <p>适合放置趋势图、关键词云和原文链接，帮助研究者快速比对口径变化。</p>
+                <div class="meta-line">信源：
+                  <a class="source-link" href="https://www.c-span.org/search/?searchtype=All&query=Donald+Trump+China" target="_blank" rel="noreferrer">C-SPAN</a>
+                  <a class="source-link" href="https://www.presidency.ucsb.edu/advanced-search" target="_blank" rel="noreferrer">American Presidency Project</a>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card span-6" id="schedule">
+            <div class="section-head">
+              <div>
+                <h3>近期日程</h3>
+                <p>合并官方日程和媒体报道的到访地点。</p>
+              </div>
+              <span class="pill">Daily Track</span>
+            </div>
+            <div class="schedule-board">
+              <div class="schedule-card">
+                <b>当日</b>
+                <ul>
+                  <li><a class="source-link" href="https://www.whitehouse.gov/briefing-room/statements-releases/" target="_blank" rel="noreferrer">白宫官网</a>公开日程与声明</li>
+                  <li>媒体跟踪：公开活动、会见、讲话地点</li>
+                </ul>
+              </div>
+              <div class="schedule-card">
+                <b>过去一周</b>
+                <ul>
+                  <li>按日期罗列行程、讲话和采访</li>
+                  <li>标记每条信息的媒体信源和可信等级</li>
+                </ul>
+              </div>
+              <div class="schedule-card">
+                <b>更长时间</b>
+                <ul>
+                  <li>按州、城市、国家和议题聚合</li>
+                  <li>支持查看外交、竞选、经济议题路径</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <article class="card span-12" id="polls">
+            <div class="section-head">
+              <div>
+                <h3>民调数据</h3>
+                <p>用条状图显示不同机构的支持率数字，点击机构可跳转原网页。</p>
+              </div>
+              <span class="pill">Polling Snapshot</span>
+            </div>
+            <div class="poll-chart" aria-label="特朗普民调支持率条状图">
+              <a class="poll-row" href="https://projects.fivethirtyeight.com/polls/approval/donald-trump/" target="_blank" rel="noreferrer">
+                <span class="poll-source">FiveThirtyEight</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 45%;"></span></span>
+                <span class="poll-value">45%</span>
+              </a>
+              <a class="poll-row" href="https://www.realclearpolitics.com/epolls/latest_polls/" target="_blank" rel="noreferrer">
+                <span class="poll-source">RealClearPolitics</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 44%;"></span></span>
+                <span class="poll-value">44%</span>
+              </a>
+              <a class="poll-row" href="https://today.yougov.com/topics/politics" target="_blank" rel="noreferrer">
+                <span class="poll-source">YouGov</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 42%;"></span></span>
+                <span class="poll-value">42%</span>
+              </a>
+              <a class="poll-row" href="https://www.reuters.com/world/us/" target="_blank" rel="noreferrer">
+                <span class="poll-source">Reuters/Ipsos</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 41%;"></span></span>
+                <span class="poll-value">41%</span>
+              </a>
+              <a class="poll-row" href="https://poll.qu.edu/" target="_blank" rel="noreferrer">
+                <span class="poll-source">Quinnipiac</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 40%;"></span></span>
+                <span class="poll-value">40%</span>
+              </a>
+              <a class="poll-row" href="https://emersoncollegepolling.com/" target="_blank" rel="noreferrer">
+                <span class="poll-source">Emerson</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 46%;"></span></span>
+                <span class="poll-value">46%</span>
+              </a>
+            </div>
+            <p class="poll-note">以上为条状图展示样式；接入采集后，数值可自动替换为各机构最新支持率、调查日期和样本量。</p>
+          </article>
+
+          <article class="card span-12" id="global-sentiment">
+            <div class="section-head">
+              <div>
+                <h3>全球舆情</h3>
+                <p>覆盖美国国内主要媒体，以及美国和中国之外地区的主流媒体报道概览。</p>
+              </div>
+              <span class="pill">Global Media</span>
+            </div>
+            <div class="sentiment-map">
+              <div class="region">
+                <h4>美国国内媒体</h4>
+                <ul>
+                  <li><a class="source-link" href="https://www.nytimes.com/topic/person/donald-trump" target="_blank" rel="noreferrer">New York Times</a>：政策、司法和选举叙事</li>
+                  <li><a class="source-link" href="https://www.washingtonpost.com/donald-trump/" target="_blank" rel="noreferrer">Washington Post</a>：白宫、国会和制度议题</li>
+                  <li><a class="source-link" href="https://www.wsj.com/topics/person/donald-trump" target="_blank" rel="noreferrer">Wall Street Journal</a>：市场、贸易和商业影响</li>
+                  <li><a class="source-link" href="https://www.foxnews.com/category/person/donald-trump" target="_blank" rel="noreferrer">Fox News</a>：保守派受众议题</li>
+                  <li><a class="source-link" href="https://www.cnn.com/politics/donald-trump" target="_blank" rel="noreferrer">CNN</a>：行政与政治风险</li>
+                  <li><a class="source-link" href="https://www.nbcnews.com/politics/donald-trump" target="_blank" rel="noreferrer">NBC News</a>：民调、竞选和政策执行</li>
+                  <li><a class="source-link" href="https://www.axios.com/politics-policy/donald-trump" target="_blank" rel="noreferrer">Axios</a>：短讯式政策信号和权力网络</li>
+                  <li><a class="source-link" href="https://apnews.com/hub/donald-trump" target="_blank" rel="noreferrer">AP</a>：事实报道和全国性事件追踪</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>欧洲媒体</h4>
+                <ul>
+                  <li><a class="source-link" href="https://www.bbc.com/news/topics/cp7r8vgl2rgt/donald-trump" target="_blank" rel="noreferrer">BBC</a>：英欧安全与贸易影响</li>
+                  <li><a class="source-link" href="https://www.theguardian.com/us-news/donaldtrump" target="_blank" rel="noreferrer">The Guardian</a>：民主制度与社会议题</li>
+                  <li><a class="source-link" href="https://www.ft.com/trump" target="_blank" rel="noreferrer">Financial Times</a>：金融市场、贸易与产业政策</li>
+                  <li><a class="source-link" href="https://www.economist.com/topics/donald-trump" target="_blank" rel="noreferrer">The Economist</a>：自由主义视角与制度分析</li>
+                  <li><a class="source-link" href="https://www.lemonde.fr/en/search/?search_keywords=Trump" target="_blank" rel="noreferrer">Le Monde</a>：法国和欧盟政策语境</li>
+                  <li><a class="source-link" href="https://www.dw.com/en/search/trump" target="_blank" rel="noreferrer">Deutsche Welle</a>：德国和欧洲公共媒体视角</li>
+                  <li><a class="source-link" href="https://www.politico.eu/search/?q=Trump" target="_blank" rel="noreferrer">Politico Europe</a>：欧盟政治和跨大西洋关系</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>俄罗斯媒体</h4>
+                <ul>
+                  <li><a class="source-link" href="https://tass.com/search?searchStr=Trump" target="_blank" rel="noreferrer">TASS</a>：官方通讯社视角</li>
+                  <li><a class="source-link" href="https://www.interfax.com/search/?query=Trump" target="_blank" rel="noreferrer">Interfax</a>：外交和安全议题快讯</li>
+                  <li><a class="source-link" href="https://www.kommersant.ru/search/results?search_query=Trump" target="_blank" rel="noreferrer">Kommersant</a>：俄国内政治与商业语境</li>
+                  <li><a class="source-link" href="https://www.themoscowtimes.com/search?query=Trump" target="_blank" rel="noreferrer">Moscow Times</a>：英文独立媒体观察</li>
+                  <li><a class="source-link" href="https://www.rt.com/search?q=Trump" target="_blank" rel="noreferrer">RT</a>：国际传播与叙事框架</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>日本 / 韩国</h4>
+                <ul>
+                  <li><a class="source-link" href="https://www3.nhk.or.jp/nhkworld/en/news/tags/80/" target="_blank" rel="noreferrer">NHK</a>：同盟、安全与经济议题</li>
+                  <li><a class="source-link" href="https://www.japantimes.co.jp/tag/donald-trump/" target="_blank" rel="noreferrer">Japan Times</a>：区域影响分析</li>
+                  <li><a class="source-link" href="https://en.yna.co.kr/search/index?query=Trump" target="_blank" rel="noreferrer">Yonhap</a>：半岛安全和韩美关系</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>拉美</h4>
+                <ul>
+                  <li><a class="source-link" href="https://www.reuters.com/world/americas/" target="_blank" rel="noreferrer">Reuters Americas</a>：移民、贸易与外交</li>
+                  <li><a class="source-link" href="https://english.elpais.com/search/trump/" target="_blank" rel="noreferrer">El Pais</a>：西语世界观察</li>
+                  <li><a class="source-link" href="https://www.bbc.com/mundo/search?q=Trump" target="_blank" rel="noreferrer">BBC Mundo</a>：拉美公众议题和移民政策</li>
+                  <li><a class="source-link" href="https://www1.folha.uol.com.br/search/?q=Trump" target="_blank" rel="noreferrer">Folha de S.Paulo</a>：巴西政治和经贸视角</li>
+                  <li><a class="source-link" href="https://oglobo.globo.com/busca/?q=Trump" target="_blank" rel="noreferrer">O Globo</a>：巴西主流媒体观察</li>
+                  <li><a class="source-link" href="https://www.clarin.com/buscador/?q=Trump" target="_blank" rel="noreferrer">Clarin</a>：阿根廷媒体视角</li>
+                  <li><a class="source-link" href="https://www.eluniversal.com.mx/buscador/?query=Trump" target="_blank" rel="noreferrer">El Universal</a>：墨西哥边境、贸易和移民议题</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>中东</h4>
+                <ul>
+                  <li><a class="source-link" href="https://www.aljazeera.com/tag/donald-trump/" target="_blank" rel="noreferrer">Al Jazeera</a>：地区冲突与外交政策</li>
+                  <li><a class="source-link" href="https://www.thenationalnews.com/search/?query=Trump" target="_blank" rel="noreferrer">The National</a>：海湾国家视角</li>
+                </ul>
+              </div>
+              <div class="region">
+                <h4>研究输出</h4>
+                <ul>
+                  <li>每条具体信息显示媒体、日期、地区、主题标签</li>
+                  <li>点击信源名称跳转原网页，保留可审计链路</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+        </div>
+        <p class="footer-note">TT 页面当前为前端研究工作台设计稿，所有外链均跳转到对应公开信源页面。</p>
+      </section>
+    </main>
   </div>
 
-  <div class="sites" id="sites"></div>
-  <div class="toast" id="toast"></div>
-
   <script>
-    const sitesEl = document.getElementById('sites');
-    const captureAllBtn = document.getElementById('captureAll');
-    const progressEl = document.getElementById('progress');
-    const toast = document.getElementById('toast');
-    const CAPTURE_TIMEOUT_MS = 130000;
-    let sites = [];
-    let busy = false;
+    const shell = document.getElementById('shell');
+    const collapseSidebar = document.getElementById('collapseSidebar');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const askForm = document.getElementById('askForm');
+    const questionInput = document.getElementById('questionInput');
+    const answerPanel = document.getElementById('answerPanel');
+    const historyList = document.getElementById('historyList');
+    const moreHistory = document.getElementById('moreHistory');
 
-    function showToast(msg) {
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
-    }
+    function ask(question) {
+      const text = question.trim();
+      if (!text) return;
 
-    function setBusy(state) {
-      busy = state;
-      captureAllBtn.disabled = state;
-      document.querySelectorAll('.btn-capture').forEach((b) => (b.disabled = state));
-    }
+      questionInput.value = text;
+      answerPanel.innerHTML = `<strong>已接收问题：</strong>${text}<br>当前设计稿展示智能问答入口；接入检索接口后，这里将返回带信源链接的中文摘要。`;
+      answerPanel.classList.add('show');
 
-    function showLoading(preview, msg) {
-      preview.innerHTML = `<div class="loading"><div class="spinner"></div> ${msg || 'Capturing…'}</div>`;
-    }
-
-    function showImage(preview, data, name) {
-      preview.innerHTML = `
-        <div class="img-wrap">
-          <img src="${data.url}?t=${Date.now()}" alt="${name} screenshot">
-        </div>
-        <div class="meta">960×540 desktop · ${new Date(data.capturedAt).toLocaleString()}</div>`;
-    }
-
-    async function fetchWithTimeout(url, options = {}) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), CAPTURE_TIMEOUT_MS);
-      try {
-        return await fetch(url, { ...options, signal: controller.signal });
-      } finally {
-        clearTimeout(timer);
+      const li = document.createElement('li');
+      li.innerHTML = `<time>刚刚</time>${text}`;
+      historyList.prepend(li);
+      while (historyList.querySelectorAll('li:not(.history-hidden)').length > 10) {
+        const visibleItems = historyList.querySelectorAll('li:not(.history-hidden)');
+        visibleItems[visibleItems.length - 1].classList.add('history-hidden');
       }
     }
 
-    function renderSites() {
-      sitesEl.innerHTML = sites
-        .map(
-          (s) => `
-        <div class="site-card" data-id="${s.id}">
-          <div class="site-header">
-            <div>
-              <div class="site-name">${s.name}</div>
-              <div class="site-url">${s.url.replace('https://', '')}</div>
-            </div>
-            <button class="btn-capture" data-id="${s.id}">Refresh</button>
-          </div>
-          <div class="site-preview" id="preview-${s.id}">
-            <div class="loading"><div class="spinner"></div> Waiting…</div>
-          </div>
-        </div>`
-        )
-        .join('');
+    collapseSidebar.addEventListener('click', () => {
+      if (window.matchMedia('(max-width: 1100px)').matches) {
+        shell.classList.toggle('sidebar-open');
+      } else {
+        shell.classList.toggle('collapsed');
+      }
+    });
 
-      document.querySelectorAll('.btn-capture').forEach((btn) => {
-        btn.addEventListener('click', () => captureOne(btn.dataset.id));
+    mobileMenu.addEventListener('click', () => {
+      shell.classList.add('sidebar-open');
+    });
+
+    document.querySelectorAll('.tag-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        ask(button.dataset.question);
+        shell.classList.remove('sidebar-open');
       });
-    }
+    });
 
-    async function captureOne(id, showProgress) {
-      const site = sites.find((s) => s.id === id);
-      const preview = document.getElementById(`preview-${id}`);
-      showLoading(preview, `Capturing ${site.name}…`);
-      if (showProgress) progressEl.textContent = `Capturing ${site.name}…`;
+    askForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      ask(questionInput.value);
+    });
 
-      const res = await fetchWithTimeout(`/api/screenshot/${id}`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Capture failed');
-      showImage(preview, data, site.name);
-      return data;
-    }
-
-    async function captureAllSequential() {
-      if (busy) return;
-      setBusy(true);
-      showToast('Capturing sites one by one…');
-
-      let done = 0;
-      for (const site of sites) {
-        progressEl.textContent = `Capturing ${done + 1}/${sites.length}: ${site.name}…`;
-        const preview = document.getElementById(`preview-${site.id}`);
-        try {
-          await captureOne(site.id, false);
-          done += 1;
-        } catch (err) {
-          preview.innerHTML = `<div class="error-msg">${err.message}</div>`;
-        }
-      }
-
-      progressEl.textContent = `Done — ${done}/${sites.length} captured`;
-      showToast(`Finished (${done}/${sites.length})`);
-      setBusy(false);
-    }
-
-    captureAllBtn.addEventListener('click', captureAllSequential);
-
-    Promise.all([
-      fetch('/api/sites').then((r) => r.json()),
-      fetch('/api/config').then((r) => r.json()).catch(() => null),
-    ]).then(([siteList, config]) => {
-      sites = siteList;
-      if (config?.viewport) {
-        document.getElementById('viewportLabel').textContent =
-          `Desktop homepage — ${config.viewport.width}×${config.viewport.height}`;
-      }
-      renderSites();
-      captureAllSequential();
+    moreHistory.addEventListener('click', () => {
+      const hidden = historyList.querySelectorAll('.history-hidden');
+      const shouldShow = hidden.length > 0;
+      document.querySelectorAll('#historyList li').forEach((item, index) => {
+        if (index >= 10) item.classList.toggle('history-hidden', !shouldShow);
+      });
+      moreHistory.textContent = shouldShow ? '收起' : '更多';
     });
   </script>
 </body>
