@@ -671,7 +671,7 @@
         <section class="sidebar-section">
           <h2>研究标签</h2>
           <div class="tag-list">
-            <button class="tag-button" type="button" data-question="过去24小时特朗普有哪些涉华表态？">过去24小时涉华表态</button>
+            <button class="tag-button" type="button" data-question="当日特朗普有哪些涉华表态？">当日涉华表态</button>
             <button class="tag-button" type="button" data-question="特朗普近期日程和到访地点有哪些？">近期日程与动向</button>
             <button class="tag-button" type="button" data-question="当前美国主要民调如何评价特朗普？">主要民调支持率</button>
             <button class="tag-button" type="button" data-question="全球主要地区和国家的主要媒体如何报道特朗普？">全球主要媒体报道</button>
@@ -682,7 +682,7 @@
         <section class="sidebar-section">
           <h2>问答历史</h2>
           <ul class="history-list" id="historyList">
-            <li><time>09:42</time>过去24小时涉华表态有哪些？</li>
+            <li><time>09:42</time>当日涉华表态有哪些？</li>
             <li><time>09:18</time>白宫今天的公开日程是什么？</li>
             <li><time>昨天</time>摇摆州民调变化如何？</li>
             <li><time>昨天</time>日本媒体近期报道重点？</li>
@@ -727,13 +727,13 @@
             <div class="section-head">
               <div>
                 <h3>最新涉华表态</h3>
-                <p>按过去24小时、近一周和更长时间组织，用于承接网络采集结果。</p>
+                <p>按当日、过去一周和更长时间组织，用于承接网络采集结果。</p>
               </div>
               <span class="pill">China Watch</span>
             </div>
             <div class="timeline">
               <div class="timeline-item">
-                <div class="meta-line"><span>过去24小时</span><span>待接入实时抓取</span></div>
+                <div class="meta-line"><span>当日</span><span>待接入实时抓取</span></div>
                 <strong>涉华贸易、关税、科技竞争相关表态入口</strong>
                 <p>页面为实时采集留出摘要位，可在此显示原文摘录、中文摘要、情绪标签和事实核验提示。</p>
                 <div class="meta-line">信源：
@@ -742,7 +742,7 @@
                 </div>
               </div>
               <div class="timeline-item">
-                <div class="meta-line"><span>近一周</span><span>竞选/行政讲话 · 采访 · 社媒</span></div>
+                <div class="meta-line"><span>过去一周</span><span>竞选/行政讲话 · 采访 · 社媒</span></div>
                 <strong>中美关系、对华政策和产业政策表态归档</strong>
                 <p>以时间线呈现多信源报道，并标注“直接引语”“转述报道”“评论分析”等类型。</p>
                 <div class="meta-line">信源：
@@ -981,7 +981,7 @@
     };
 
     const defaultHistory = [
-      '过去24小时涉华表态有哪些？',
+      '当日涉华表态有哪些？',
       '白宫今天的公开日程是什么？',
       '摇摆州民调变化如何？',
       '日本媒体近期报道重点？',
@@ -999,7 +999,7 @@
         source: 'White House',
         region: '美国',
         country: '美国',
-        time: '24小时',
+        time: '当日',
         topics: ['日程', '官方声明'],
         url: 'https://www.whitehouse.gov/briefing-room/',
         summary: '核验特朗普当日公开行程、声明、行政动作和白宫发布的正式文本。',
@@ -1009,7 +1009,7 @@
         source: 'Reuters US',
         region: '美国',
         country: '美国',
-        time: '24小时',
+        time: '当日',
         topics: ['涉华表态', '贸易', '外交'],
         url: 'https://www.reuters.com/world/us/',
         summary: '跟踪特朗普涉华言论、贸易政策、对外政策和美国政治新闻。',
@@ -1089,7 +1089,7 @@
         source: 'TASS',
         region: '俄罗斯',
         country: '俄罗斯',
-        time: '24小时',
+        time: '当日',
         topics: ['俄罗斯', '外交', '安全'],
         url: 'https://tass.com/search?searchStr=Trump',
         summary: '观察俄罗斯官方叙事如何报道特朗普及其对俄美关系的影响。',
