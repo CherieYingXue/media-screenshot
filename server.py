@@ -1,6 +1,7 @@
 import asyncio
 import email.utils
 import os
+import re
 import socket
 import time
 import urllib.parse
@@ -182,6 +183,61 @@ def fetch_google_news(query, limit=12):
     return items
 
 
+def _compact_news_item(item):
+    return {
+        "title": item.get("title", ""),
+        "source": item.get("source", ""),
+        "url": item.get("url", ""),
+        "publishedAt": item.get("publishedAt"),
+    }
+
+
+def _extract_percent(text):
+    match = re.search(r"(\d{1,2}(?:\.\d+)?)\s*%", text or "")
+    if not match:
+        return None
+    value = float(match.group(1))
+    if value < 0 or value > 100:
+        return None
+    return value
+
+
+def build_dashboard_extracts():
+    china_today = fetch_google_news('"Donald Trump" China when:1d', 5)
+    china_week = fetch_google_news('"Donald Trump" China tariff Taiwan TikTok when:7d', 5)
+    china_long = fetch_google_news('"Donald Trump" China policy tariff technology', 5)
+    schedule_today = fetch_google_news('"Donald Trump" schedule today White House', 5)
+    schedule_week = fetch_google_news('"Donald Trump" visited rally meeting schedule when:7d', 5)
+    schedule_long = fetch_google_news('"Donald Trump" travel schedule rally visit', 5)
+    poll_news = fetch_google_news('"Donald Trump" approval rating poll percentage', 8)
+
+    polls = []
+    for item in poll_news:
+        value = _extract_percent(item["title"])
+        polls.append(
+            {
+                **_compact_news_item(item),
+                "value": value,
+                "label": f"{value:g}%" if value is not None else "待核验",
+            }
+        )
+
+    return {
+        "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "chinaStatements": {
+            "today": [_compact_news_item(item) for item in china_today],
+            "week": [_compact_news_item(item) for item in china_week],
+            "longer": [_compact_news_item(item) for item in china_long],
+        },
+        "schedule": {
+            "today": [_compact_news_item(item) for item in schedule_today],
+            "week": [_compact_news_item(item) for item in schedule_week],
+            "longer": [_compact_news_item(item) for item in schedule_long],
+        },
+        "polls": polls,
+    }
+
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
@@ -203,6 +259,14 @@ def research_news():
         )
     except Exception as e:
         return jsonify({"error": f"Failed to fetch live news: {e}"}), 502
+
+
+@app.route("/api/research/dashboard")
+def research_dashboard():
+    try:
+        return jsonify(build_dashboard_extracts())
+    except Exception as e:
+        return jsonify({"error": f"Failed to build research dashboard: {e}"}), 502
 
 
 @app.route("/")
