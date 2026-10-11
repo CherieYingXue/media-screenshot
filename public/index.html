@@ -467,6 +467,33 @@
       font-size: 0.9rem;
     }
 
+    .dashboard-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .extract-link {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(6, 13, 27, 0.52);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .extract-link strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #e0f2fe;
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .extract-link span {
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
     .meta-line {
       display: flex;
       flex-wrap: wrap;
@@ -736,6 +763,7 @@
                 <div class="meta-line"><span>当日</span><span>待接入实时抓取</span></div>
                 <strong>涉华贸易、关税、科技竞争相关表态入口</strong>
                 <p>页面为实时采集留出摘要位，可在此显示原文摘录、中文摘要、情绪标签和事实核验提示。</p>
+                <div class="dashboard-list" id="chinaToday"></div>
                 <div class="meta-line">信源：
                   <a class="source-link" href="https://www.whitehouse.gov/briefing-room/" target="_blank" rel="noreferrer">白宫简报室</a>
                   <a class="source-link" href="https://www.reuters.com/world/us/" target="_blank" rel="noreferrer">Reuters US</a>
@@ -745,6 +773,7 @@
                 <div class="meta-line"><span>过去一周</span><span>竞选/行政讲话 · 采访 · 社媒</span></div>
                 <strong>中美关系、对华政策和产业政策表态归档</strong>
                 <p>以时间线呈现多信源报道，并标注“直接引语”“转述报道”“评论分析”等类型。</p>
+                <div class="dashboard-list" id="chinaWeek"></div>
                 <div class="meta-line">信源：
                   <a class="source-link" href="https://apnews.com/hub/donald-trump" target="_blank" rel="noreferrer">AP Trump Hub</a>
                   <a class="source-link" href="https://www.politico.com/news/donald-trump" target="_blank" rel="noreferrer">Politico</a>
@@ -754,6 +783,7 @@
                 <div class="meta-line"><span>更长时间</span><span>政策演变</span></div>
                 <strong>历史表态对照：贸易、台湾、TikTok、芯片与盟友政策</strong>
                 <p>适合放置趋势图、关键词云和原文链接，帮助研究者快速比对口径变化。</p>
+                <div class="dashboard-list" id="chinaLonger"></div>
                 <div class="meta-line">信源：
                   <a class="source-link" href="https://www.c-span.org/search/?searchtype=All&query=Donald+Trump+China" target="_blank" rel="noreferrer">C-SPAN</a>
                   <a class="source-link" href="https://www.presidency.ucsb.edu/advanced-search" target="_blank" rel="noreferrer">American Presidency Project</a>
@@ -777,6 +807,7 @@
                   <li><a class="source-link" href="https://www.whitehouse.gov/briefing-room/statements-releases/" target="_blank" rel="noreferrer">白宫官网</a>公开日程与声明</li>
                   <li>媒体跟踪：公开活动、会见、讲话地点</li>
                 </ul>
+                <div class="dashboard-list" id="scheduleToday"></div>
               </div>
               <div class="schedule-card">
                 <b>过去一周</b>
@@ -784,6 +815,7 @@
                   <li>按日期罗列行程、讲话和采访</li>
                   <li>标记每条信息的媒体信源和可信等级</li>
                 </ul>
+                <div class="dashboard-list" id="scheduleWeek"></div>
               </div>
               <div class="schedule-card">
                 <b>更长时间</b>
@@ -791,6 +823,7 @@
                   <li>按州、城市、国家和议题聚合</li>
                   <li>支持查看外交、竞选、经济议题路径</li>
                 </ul>
+                <div class="dashboard-list" id="scheduleLonger"></div>
               </div>
             </div>
           </article>
@@ -803,7 +836,7 @@
               </div>
               <span class="pill">Polling Snapshot</span>
             </div>
-            <div class="poll-chart" aria-label="特朗普民调支持率条状图">
+            <div class="poll-chart" id="pollChart" aria-label="特朗普民调支持率条状图">
               <a class="poll-row" href="https://projects.fivethirtyeight.com/polls/approval/donald-trump/" target="_blank" rel="noreferrer">
                 <span class="poll-source">FiveThirtyEight</span>
                 <span class="bar-track"><span class="bar-fill" style="width: 45%;"></span></span>
@@ -980,6 +1013,15 @@
     const sourceResults = document.getElementById('sourceResults');
     const liveNewsResults = document.getElementById('liveNewsResults');
     const researchNotes = document.getElementById('researchNotes');
+    const dashboardTargets = {
+      chinaToday: document.getElementById('chinaToday'),
+      chinaWeek: document.getElementById('chinaWeek'),
+      chinaLonger: document.getElementById('chinaLonger'),
+      scheduleToday: document.getElementById('scheduleToday'),
+      scheduleWeek: document.getElementById('scheduleWeek'),
+      scheduleLonger: document.getElementById('scheduleLonger'),
+      pollChart: document.getElementById('pollChart'),
+    };
 
     const STORAGE_KEYS = {
       history: 'tt-question-history',
@@ -1241,6 +1283,56 @@
       `).join('') || '<div class="result-card"><h4>没有匹配信源</h4><p>请减少筛选条件，或换一个关键词。</p></div>';
     }
 
+    function renderExtractList(target, items) {
+      target.innerHTML = (items || []).slice(0, 4).map((item) => `
+        <a class="extract-link" href="${item.url}" target="_blank" rel="noreferrer">
+          <strong>${escapeHTML(item.title)}</strong>
+          <span>${escapeHTML(item.source || '公开信源')} · ${item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '时间待核验'}</span>
+        </a>
+      `).join('') || '<div class="extract-link"><strong>暂无可提炼结果</strong><span>稍后刷新或换一个关键词。</span></div>';
+    }
+
+    function renderPollExtracts(items) {
+      dashboardTargets.pollChart.innerHTML = (items || []).slice(0, 6).map((item) => {
+        const value = Number(item.value);
+        const width = Number.isFinite(value) ? Math.max(4, Math.min(value, 100)) : 12;
+        return `
+          <a class="poll-row" href="${item.url}" target="_blank" rel="noreferrer">
+            <span class="poll-source">${escapeHTML(item.source || '民调信源')}</span>
+            <span class="bar-track"><span class="bar-fill" style="width: ${width}%;"></span></span>
+            <span class="poll-value">${escapeHTML(item.label || '待核验')}</span>
+          </a>
+        `;
+      }).join('') || '<div class="result-card"><h4>暂无民调结果</h4><p>稍后刷新或查看原始民调网站。</p></div>';
+    }
+
+    async function loadDashboardExtracts() {
+      Object.values(dashboardTargets).forEach((target) => {
+        target.setAttribute('aria-busy', 'true');
+      });
+      try {
+        const response = await fetch('/api/research/dashboard');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || '首页聚合失败');
+        renderExtractList(dashboardTargets.chinaToday, data.chinaStatements.today);
+        renderExtractList(dashboardTargets.chinaWeek, data.chinaStatements.week);
+        renderExtractList(dashboardTargets.chinaLonger, data.chinaStatements.longer);
+        renderExtractList(dashboardTargets.scheduleToday, data.schedule.today);
+        renderExtractList(dashboardTargets.scheduleWeek, data.schedule.week);
+        renderExtractList(dashboardTargets.scheduleLonger, data.schedule.longer);
+        renderPollExtracts(data.polls);
+      } catch (error) {
+        const message = `<div class="extract-link"><strong>实时提炼暂不可用</strong><span>${escapeHTML(error.message)}</span></div>`;
+        Object.values(dashboardTargets).forEach((target) => {
+          target.innerHTML = message;
+        });
+      } finally {
+        Object.values(dashboardTargets).forEach((target) => {
+          target.removeAttribute('aria-busy');
+        });
+      }
+    }
+
     function liveQueryText() {
       return questionInput.value.trim()
         || sourceSearch.value.trim()
@@ -1401,6 +1493,8 @@
     populateSelect(topicFilter, uniqueTopics());
     renderHistory();
     renderSources();
+    loadDashboardExtracts();
+    refreshLiveNews();
   </script>
 </body>
 </html>
