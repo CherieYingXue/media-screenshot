@@ -349,7 +349,7 @@ def get_local_ip():
 if __name__ == "__main__":
     ip = get_local_ip()
     print("\n========================================")
-    print("  Media Screenshot App is running!")
+    print("  TT Research Tool is running!")
     print("========================================")
     print(f"  On this PC:    http://localhost:{PORT}")
     print(f"  On your phone: http://{ip}:{PORT}")

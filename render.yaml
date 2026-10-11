@@ -1,15 +1,13 @@
 services:
   - type: web
-    name: media-screenshot
+    name: tt-research-tool
     runtime: python
     plan: free
     buildCommand: bash build.sh
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 600 server:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 180 server:app
     healthCheckPath: /health
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: PYTHON_VERSION
         value: "3.11.9"
-      - key: PLAYWRIGHT_BROWSERS_PATH
-        value: /opt/render/project/src/ms-playwright
