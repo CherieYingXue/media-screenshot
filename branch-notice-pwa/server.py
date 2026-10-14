@@ -14,6 +14,7 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = Path(os.environ.get("NOTICES_DATA_DIR", BASE_DIR / "data"))
 DATA_FILE = DATA_DIR / "notifications.json"
 GROUPS = ("第一小组", "第二小组", "第三小组")
+SEED_NOTICE_IDS = {"seed-branch-1", "seed-group-1", "seed-group-2"}
 DATA_LOCK = threading.Lock()
 
 
@@ -22,38 +23,7 @@ def utc_now():
 
 
 def seed_notifications():
-    return [
-        {
-            "id": "seed-branch-1",
-            "type": "branch",
-            "group": None,
-            "title": "支部会议通知",
-            "content": "本周五 19:30 召开支部全体会议，请各小组成员提前 10 分钟进入会议室。",
-            "authorRole": "支部通知管理员",
-            "createdAt": "2026-10-14T08:30:00Z",
-            "pinned": True,
-        },
-        {
-            "id": "seed-group-1",
-            "type": "group",
-            "group": "第一小组",
-            "title": "第一小组学习提醒",
-            "content": "请第一小组成员今晚前完成学习材料阅读，并在小组群内反馈心得。",
-            "authorRole": "小组通知管理员",
-            "createdAt": "2026-10-14T09:10:00Z",
-            "pinned": False,
-        },
-        {
-            "id": "seed-group-2",
-            "type": "group",
-            "group": "第二小组",
-            "title": "第二小组材料收集",
-            "content": "第二小组请于明日 12:00 前提交本月活动照片和简要说明。",
-            "authorRole": "小组通知管理员",
-            "createdAt": "2026-10-14T09:20:00Z",
-            "pinned": False,
-        },
-    ]
+    return []
 
 
 def ensure_data_file():
@@ -61,6 +31,15 @@ def ensure_data_file():
     if not DATA_FILE.exists():
         DATA_FILE.write_text(
             json.dumps(seed_notifications(), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return
+
+    notifications = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+    filtered = [item for item in notifications if item.get("id") not in SEED_NOTICE_IDS]
+    if len(filtered) != len(notifications):
+        DATA_FILE.write_text(
+            json.dumps(filtered, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 
