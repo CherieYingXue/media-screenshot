@@ -47,6 +47,7 @@ def normalize_notification(notification):
         scope = SCOPE_BY_ID.get(notification["scope"], SCOPE_BY_ID["all"])
         notification["scope"] = scope["id"]
         notification["scopeLabel"] = scope["label"]
+        notification.setdefault("acknowledgements", [])
         return notification
 
     # Keep older persisted notices readable after the role/scope model change.
@@ -57,6 +58,7 @@ def normalize_notification(notification):
     scope = SCOPE_BY_ID[scope_id]
     notification["scope"] = scope["id"]
     notification["scopeLabel"] = scope["label"]
+    notification.setdefault("acknowledgements", [])
     return notification
 
 
@@ -142,6 +144,37 @@ def remove_notification(notice_id, actor_roles):
         return target, None, None
 
 
+def acknowledge_notification(notice_id, actor_roles, student_name):
+    ensure_data_file()
+    student_name = (student_name or "").strip()[:80]
+    if not student_name:
+        return None, "请先填写学号+姓名", 400
+
+    with DATA_LOCK:
+        notifications = clean_notifications(json.loads(DATA_FILE.read_text(encoding="utf-8")))
+        target = next((item for item in notifications if item["id"] == notice_id), None)
+        if not target:
+            return None, "通知不存在", 404
+        if not visible_to_roles(target, actor_roles):
+            return None, "你不能确认当前不可见的通知", 403
+
+        acknowledgements = target.setdefault("acknowledgements", [])
+        if not any(item.get("studentName") == student_name for item in acknowledgements):
+            acknowledgements.append(
+                {
+                    "studentName": student_name,
+                    "acknowledgedAt": utc_now(),
+                    "acknowledgedAtOrder": created_at_order(),
+                }
+            )
+            acknowledgements.sort(
+                key=lambda item: item.get("acknowledgedAtOrder", 0),
+                reverse=True,
+            )
+            write_notifications(notifications)
+        return target, None, None
+
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok"})
@@ -200,6 +233,7 @@ def create_notification():
         "title": title[:80],
         "content": content[:2000],
         "authorRoles": [role for role in actor_roles if role in PUBLISHER_ROLES],
+        "acknowledgements": [],
         "createdAt": utc_now(),
         "createdAtOrder": created_at_order(),
         "pinned": pinned,
@@ -216,6 +250,19 @@ def delete_notification(notice_id):
     if error:
         return jsonify({"error": error}), status
     return jsonify({"deleted": deleted})
+
+
+@app.route("/api/notifications/<notice_id>/ack", methods=["POST"])
+def acknowledge(notice_id):
+    payload = request.get_json(silent=True) or {}
+    notification, error, status = acknowledge_notification(
+        notice_id,
+        parse_roles(payload),
+        payload.get("studentName"),
+    )
+    if error:
+        return jsonify({"error": error}), status
+    return jsonify({"notification": notification})
 
 
 if __name__ == "__main__":

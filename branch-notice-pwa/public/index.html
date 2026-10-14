@@ -249,6 +249,38 @@
     .tag.scope { color: #991b1b; background: #fee2e2; }
     .tag.pin { color: #92400e; background: #fef3c7; }
 
+    .ack-area {
+      display: grid;
+      gap: 9px;
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px dashed #fed7aa;
+    }
+
+    .ack-button {
+      width: fit-content;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      font-weight: 850;
+    }
+
+    .ack-button.done {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .ack-list {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .ack-list strong { color: var(--text); }
+
     .empty {
       padding: 24px 14px;
       text-align: center;
@@ -305,9 +337,10 @@
       <div class="section-title">
         <div>
           <h2 id="loginTitle">选择身份</h2>
-          <p class="hint">请选择一个或多个身份。支部书记、支委、组长可以发布和删除通知。</p>
+          <p class="hint">请先填写学号+姓名，再选择一个或多个身份。支部书记、支委、组长可以发布和删除通知。</p>
         </div>
       </div>
+      <input class="field" id="studentName" maxlength="80" placeholder="学号+姓名，例如：20260001 张三" autocomplete="name">
       <div class="choice-grid" id="roleGrid"></div>
       <div class="actions" style="margin-top: 12px;">
         <button class="button" id="saveProfile" type="button">进入通知页</button>
@@ -370,6 +403,7 @@
       '第三组成员': '查看第三组成员通知',
     };
 
+    const studentName = document.getElementById('studentName');
     const roleGrid = document.getElementById('roleGrid');
     const saveProfile = document.getElementById('saveProfile');
     const resetProfile = document.getElementById('resetProfile');
@@ -467,6 +501,7 @@
     }
 
     function applyProfileToForm() {
+      studentName.value = profile?.studentName || '';
       roleGrid.querySelectorAll('input').forEach((input) => {
         input.checked = profile?.roles?.includes(input.value) || false;
       });
@@ -482,7 +517,7 @@
       }
 
       profileSummary.style.display = 'block';
-      profileSummary.textContent = `当前身份：${profile.roles.join('、')}`;
+      profileSummary.textContent = `当前人员：${profile.studentName}；当前身份：${profile.roles.join('、')}`;
       noticeScopeText.textContent = `显示与你身份匹配的通知；支部书记可查看全部通知。`;
       composerPanel.style.display = hasPublisherRole() ? 'block' : 'none';
     }
@@ -530,6 +565,9 @@
 
       noticeList.innerHTML = items.map((notice) => {
         const isUnread = !readIds.has(notice.id);
+        const acknowledgements = notice.acknowledgements || [];
+        const acknowledged = hasAcknowledged(notice);
+        const ackNames = acknowledgements.map((item) => escapeHTML(item.studentName)).join('、');
         return `
           <article class="notice ${isUnread ? 'unread' : ''}" data-id="${notice.id}">
             <div class="notice-head">
@@ -543,9 +581,17 @@
               <span>${escapeHTML((notice.authorRoles || []).join('、') || notice.authorRole || '发布者')}</span>
               <span>${formatTime(notice.createdAt)}</span>
             </div>
+            <div class="ack-area">
+              <button class="ack-button ${acknowledged ? 'done' : ''}" type="button" data-ack-id="${notice.id}" ${acknowledged ? 'disabled' : ''}>${acknowledged ? '已知道' : '知道了'}</button>
+              <div class="ack-list"><strong>已知道：</strong>${ackNames || '暂无'}</div>
+            </div>
           </article>
         `;
       }).join('');
+    }
+
+    function hasAcknowledged(notice) {
+      return (notice.acknowledgements || []).some((item) => item.studentName === profile?.studentName);
     }
 
     function unreadCount() {
@@ -578,9 +624,11 @@
     }
 
     saveProfile.addEventListener('click', async () => {
+      const name = studentName.value.trim();
       const roles = selectedRoles();
+      if (!name) return showToast('请填写学号+姓名');
       if (!roles.length) return showToast('请至少选择一个身份');
-      profile = { roles };
+      profile = { studentName: name, roles };
       saveJSON(STORAGE.profile, profile);
       renderProfile();
       await fetchNotices();
@@ -636,6 +684,12 @@
     });
 
     noticeList.addEventListener('click', (event) => {
+      const ackButton = event.target.closest('[data-ack-id]');
+      if (ackButton) {
+        acknowledgeNotice(ackButton.dataset.ackId);
+        return;
+      }
+
       const deleteButton = event.target.closest('[data-delete-id]');
       if (deleteButton) {
         deleteNotice(deleteButton.dataset.deleteId);
@@ -666,6 +720,22 @@
       saveJSON(STORAGE.readIds, [...readIds]);
       await fetchNotices();
       showToast('通知已删除');
+    }
+
+    async function acknowledgeNotice(noticeId) {
+      if (!profile?.studentName) return showToast('请先填写学号+姓名');
+      const notice = notices.find((item) => item.id === noticeId);
+      if (!notice || hasAcknowledged(notice)) return;
+
+      const response = await fetch(`/api/notifications/${encodeURIComponent(noticeId)}/ack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roles: profile.roles, studentName: profile.studentName }),
+      });
+      const data = await response.json();
+      if (!response.ok) return showToast(data.error || '确认失败');
+      await fetchNotices();
+      showToast('已记录：知道了');
     }
 
     if ('serviceWorker' in navigator) {
