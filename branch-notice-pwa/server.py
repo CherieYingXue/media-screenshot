@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import threading
 import time
 import uuid
@@ -38,6 +39,21 @@ def created_at_order():
     return time.time_ns()
 
 
+def student_sort_key(acknowledgement):
+    student_name = acknowledgement.get("studentName", "")
+    match = re.search(r"\d+", student_name)
+    number = int(match.group(0)) if match else 10**18
+    return (number, student_name)
+
+
+def sort_acknowledgements(notification):
+    notification["acknowledgements"] = sorted(
+        notification.get("acknowledgements", []),
+        key=student_sort_key,
+    )
+    return notification
+
+
 def seed_notifications():
     return []
 
@@ -48,7 +64,7 @@ def normalize_notification(notification):
         notification["scope"] = scope["id"]
         notification["scopeLabel"] = scope["label"]
         notification.setdefault("acknowledgements", [])
-        return notification
+        return sort_acknowledgements(notification)
 
     # Keep older persisted notices readable after the role/scope model change.
     if notification.get("type") == "group":
@@ -59,7 +75,7 @@ def normalize_notification(notification):
     notification["scope"] = scope["id"]
     notification["scopeLabel"] = scope["label"]
     notification.setdefault("acknowledgements", [])
-    return notification
+    return sort_acknowledgements(notification)
 
 
 def clean_notifications(notifications):
@@ -167,10 +183,7 @@ def acknowledge_notification(notice_id, actor_roles, student_name):
                     "acknowledgedAtOrder": created_at_order(),
                 }
             )
-            acknowledgements.sort(
-                key=lambda item: item.get("acknowledgedAtOrder", 0),
-                reverse=True,
-            )
+            sort_acknowledgements(target)
             write_notifications(notifications)
         return target, None, None
 
