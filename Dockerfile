@@ -1,16 +1,14 @@
-FROM mcr.microsoft.com/playwright/python:v1.49.1-jammy
+FROM python:3.11-slim
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server.py public ./
+COPY . .
 
-RUN mkdir -p screenshots
-
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV NOTICES_DATA_DIR=/app/data
 
 EXPOSE 10000
 
-CMD sh -c "gunicorn --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 2 --timeout 300 server:app"
+CMD sh -c "gunicorn --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 4 --timeout 120 server:app"

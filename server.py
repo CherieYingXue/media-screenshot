@@ -1,185 +1,93 @@
-import asyncio
-import email.utils
+import json
 import os
-import socket
+import threading
 import time
-import urllib.parse
-import urllib.request
-import xml.etree.ElementTree as ET
-from concurrent.futures import ThreadPoolExecutor
+import uuid
 from pathlib import Path
-
-# Keep browsers inside the project so Render build artifacts include them.
-os.environ.setdefault(
-    "PLAYWRIGHT_BROWSERS_PATH",
-    str(Path(__file__).parent / "ms-playwright"),
-)
 
 from flask import Flask, jsonify, request, send_from_directory
 
+
 app = Flask(__name__, static_folder="public", static_url_path="")
 PORT = int(os.environ.get("PORT", 3847))
-SCREENSHOTS_DIR = Path(__file__).parent / "screenshots"
-SCREENSHOTS_DIR.mkdir(exist_ok=True)
-
-SITES = [
-    {"id": "cnn", "name": "CNN", "url": "https://www.cnn.com"},
-    {"id": "nytimes", "name": "New York Times", "url": "https://www.nytimes.com"},
-    {"id": "washingtonpost", "name": "Washington Post", "url": "https://www.washingtonpost.com"},
-    {"id": "cnbc", "name": "CNBC", "url": "https://www.cnbc.com"},
-    {"id": "foxnews", "name": "Fox News", "url": "https://www.foxnews.com"},
-    {"id": "nypost", "name": "NY Post", "url": "https://nypost.com"},
-    {"id": "latimes", "name": "LA Times", "url": "https://www.latimes.com"},
-]
-
-DESKTOP_UA = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-)
-# Half of full HD — faster capture and smaller images on Render free tier.
-DESKTOP_VIEWPORT = {"width": 960, "height": 540}
-BROWSER_ARGS = [
-    "--disable-http2",
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--disable-extensions",
-]
-PAGE_TIMEOUT_MS = 45000
-PAGE_SETTLE_MS = 1500
-CAPTURE_TIMEOUT_SEC = 120
-NEWS_TIMEOUT_SEC = 12
-NEWS_CACHE_TTL_SEC = 300
-NEWS_CACHE = {}
-
-_playwright_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="playwright")
+BASE_DIR = Path(__file__).parent
+DATA_DIR = Path(os.environ.get("NOTICES_DATA_DIR", BASE_DIR / "data"))
+DATA_FILE = DATA_DIR / "notifications.json"
+GROUPS = ("第一小组", "第二小组", "第三小组")
+DATA_LOCK = threading.Lock()
 
 
-class _BrowserPool:
-    """Reuse one Chromium instance inside the playwright worker thread."""
-
-    def __init__(self):
-        self._playwright = None
-        self._browser = None
-
-    async def capture(self, site, filepath):
-        from playwright.async_api import async_playwright
-
-        if self._browser is None or not self._browser.is_connected():
-            if self._playwright:
-                await self._playwright.stop()
-            self._playwright = await async_playwright().start()
-            self._browser = await self._playwright.chromium.launch(
-                headless=True,
-                args=BROWSER_ARGS,
-            )
-
-        context = await self._browser.new_context(
-            viewport=DESKTOP_VIEWPORT,
-            device_scale_factor=1,
-            user_agent=DESKTOP_UA,
-        )
-        page = await context.new_page()
-        try:
-
-            async def _route_handler(route):
-                if route.request.resource_type in ("media", "font"):
-                    await route.abort()
-                else:
-                    await route.continue_()
-
-            await page.route("**/*", _route_handler)
-            await page.goto(
-                site["url"],
-                wait_until="domcontentloaded",
-                timeout=PAGE_TIMEOUT_MS,
-            )
-            await page.wait_for_timeout(PAGE_SETTLE_MS)
-            await page.screenshot(path=str(filepath), full_page=False, type="jpeg", quality=80)
-        finally:
-            await context.close()
+def utc_now():
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-_browser_pool = _BrowserPool()
-
-
-async def _capture_screenshot_async(site):
-    filename = f"{site['id']}-{int(time.time() * 1000)}.jpg"
-    filepath = SCREENSHOTS_DIR / filename
-    await _browser_pool.capture(site, filepath)
-    return {
-        "filename": filename,
-        "url": f"/screenshots/{filename}",
-        "capturedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    }
-
-
-def _run_async(coro):
-    loop = asyncio.new_event_loop()
-    try:
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
-        asyncio.set_event_loop(None)
-
-
-def capture_screenshot(site):
-    future = _playwright_executor.submit(_run_async, _capture_screenshot_async(site))
-    return future.result(timeout=CAPTURE_TIMEOUT_SEC)
-
-
-def _parse_rss_datetime(value):
-    try:
-        parsed = email.utils.parsedate_to_datetime(value)
-    except (TypeError, ValueError):
-        return None
-    if not parsed:
-        return None
-    return parsed.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def fetch_google_news(query, limit=12):
-    query = (query or "Donald Trump").strip()[:180]
-    limit = max(1, min(int(limit or 12), 20))
-    cache_key = (query.lower(), limit)
-    cached = NEWS_CACHE.get(cache_key)
-    now = time.time()
-    if cached and now - cached["time"] < NEWS_CACHE_TTL_SEC:
-        return cached["items"]
-
-    params = urllib.parse.urlencode(
+def seed_notifications():
+    return [
         {
-            "q": query,
-            "hl": "en-US",
-            "gl": "US",
-            "ceid": "US:en",
-        }
-    )
-    url = f"https://news.google.com/rss/search?{params}"
-    req = urllib.request.Request(url, headers={"User-Agent": DESKTOP_UA})
-    with urllib.request.urlopen(req, timeout=NEWS_TIMEOUT_SEC) as response:
-        xml_body = response.read()
+            "id": "seed-branch-1",
+            "type": "branch",
+            "group": None,
+            "title": "支部会议通知",
+            "content": "本周五 19:30 召开支部全体会议，请各小组成员提前 10 分钟进入会议室。",
+            "authorRole": "支部通知管理员",
+            "createdAt": "2026-10-14T08:30:00Z",
+            "pinned": True,
+        },
+        {
+            "id": "seed-group-1",
+            "type": "group",
+            "group": "第一小组",
+            "title": "第一小组学习提醒",
+            "content": "请第一小组成员今晚前完成学习材料阅读，并在小组群内反馈心得。",
+            "authorRole": "小组通知管理员",
+            "createdAt": "2026-10-14T09:10:00Z",
+            "pinned": False,
+        },
+        {
+            "id": "seed-group-2",
+            "type": "group",
+            "group": "第二小组",
+            "title": "第二小组材料收集",
+            "content": "第二小组请于明日 12:00 前提交本月活动照片和简要说明。",
+            "authorRole": "小组通知管理员",
+            "createdAt": "2026-10-14T09:20:00Z",
+            "pinned": False,
+        },
+    ]
 
-    root = ET.fromstring(xml_body)
-    items = []
-    for item in root.findall("./channel/item")[:limit]:
-        title = item.findtext("title", default="").strip()
-        link = item.findtext("link", default="").strip()
-        source = item.findtext("source", default="Google News").strip()
-        published = _parse_rss_datetime(item.findtext("pubDate", default=""))
-        if title and link:
-            items.append(
-                {
-                    "title": title,
-                    "url": link,
-                    "source": source or "Google News",
-                    "publishedAt": published,
-                }
-            )
 
-    NEWS_CACHE[cache_key] = {"time": now, "items": items}
-    return items
+def ensure_data_file():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not DATA_FILE.exists():
+        DATA_FILE.write_text(
+            json.dumps(seed_notifications(), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+
+def load_notifications():
+    ensure_data_file()
+    with DATA_LOCK:
+        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
+
+
+def append_notification(notification):
+    ensure_data_file()
+    with DATA_LOCK:
+        notifications = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        notifications.append(notification)
+        tmp_file = DATA_FILE.with_suffix(".json.tmp")
+        tmp_file.write_text(
+            json.dumps(notifications, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        tmp_file.replace(DATA_FILE)
+
+
+def visible_to_group(notification, group):
+    if notification["type"] == "branch":
+        return True
+    return group in GROUPS and notification.get("group") == group
 
 
 @app.route("/health")
@@ -187,108 +95,76 @@ def health():
     return jsonify({"status": "ok"})
 
 
-@app.route("/api/research/news")
-def research_news():
-    query = request.args.get("q", "Donald Trump")
-    limit = request.args.get("limit", 12)
-    try:
-        items = fetch_google_news(query, limit)
-        return jsonify(
-            {
-                "query": query,
-                "count": len(items),
-                "results": items,
-                "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            }
-        )
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch live news: {e}"}), 502
-
-
 @app.route("/")
 def index():
     return send_from_directory("public", "index.html")
 
 
-@app.route("/api/config")
-def api_config():
+@app.route("/api/bootstrap")
+def bootstrap():
     return jsonify(
         {
-            "viewport": DESKTOP_VIEWPORT,
-            "format": "jpeg",
+            "groups": GROUPS,
+            "roles": ["支部通知管理员", "小组通知管理员", "订阅者"],
+            "noticeTypes": [
+                {"id": "branch", "label": "支部通知"},
+                {"id": "group", "label": "小组通知"},
+            ],
         }
     )
 
 
-@app.route("/api/sites")
-def list_sites():
-    return jsonify(SITES)
+@app.route("/api/notifications")
+def list_notifications():
+    group = request.args.get("group", "")
+    notifications = [
+        item for item in load_notifications() if visible_to_group(item, group)
+    ]
+    notifications.sort(key=lambda item: (item.get("pinned", False), item["createdAt"]), reverse=True)
+    return jsonify({"count": len(notifications), "notifications": notifications})
 
 
-@app.route("/api/screenshot/<site_id>", methods=["POST"])
-def screenshot_one(site_id):
-    site = next((s for s in SITES if s["id"] == site_id), None)
-    if not site:
-        return jsonify({"error": "Site not found"}), 404
-    try:
-        result = capture_screenshot(site)
-        return jsonify({"site": site["name"], **result})
-    except Exception as e:
-        return jsonify({"error": f"Failed to capture {site['name']}: {e}"}), 500
+@app.route("/api/notifications", methods=["POST"])
+def create_notification():
+    payload = request.get_json(silent=True) or {}
+    notice_type = payload.get("type")
+    title = (payload.get("title") or "").strip()
+    content = (payload.get("content") or "").strip()
+    group = payload.get("group") or None
+    author_role = payload.get("authorRole")
+    pinned = bool(payload.get("pinned", False))
 
+    if notice_type not in {"branch", "group"}:
+        return jsonify({"error": "通知类型无效"}), 400
+    if not title or not content:
+        return jsonify({"error": "标题和内容不能为空"}), 400
+    if notice_type == "branch" and author_role != "支部通知管理员":
+        return jsonify({"error": "只有支部通知管理员可以发布支部通知"}), 403
+    if notice_type == "group" and author_role != "小组通知管理员":
+        return jsonify({"error": "只有小组通知管理员可以发布小组通知"}), 403
+    if notice_type == "group" and group not in GROUPS:
+        return jsonify({"error": "小组通知必须选择第一、第二或第三小组"}), 400
 
-@app.route("/api/screenshot-all", methods=["POST"])
-def screenshot_all():
-    results = []
-    for site in SITES:
-        try:
-            result = capture_screenshot(site)
-            results.append({"site": site["name"], "siteId": site["id"], "ok": True, **result})
-        except Exception as e:
-            results.append({"site": site["name"], "siteId": site["id"], "ok": False, "error": str(e)})
-    return jsonify({"results": results})
+    notification = {
+        "id": uuid.uuid4().hex,
+        "type": notice_type,
+        "group": group if notice_type == "group" else None,
+        "title": title[:80],
+        "content": content[:2000],
+        "authorRole": author_role,
+        "createdAt": utc_now(),
+        "pinned": pinned,
+    }
 
-
-@app.route("/screenshots/<path:filename>")
-def serve_screenshot(filename):
-    return send_from_directory(SCREENSHOTS_DIR, filename)
-
-
-def get_local_ip():
-    """Prefer a typical home Wi-Fi address (192.168.x.x or 10.x.x.x)."""
-    candidates = []
-    try:
-        hostname = socket.gethostname()
-        for info in socket.getaddrinfo(hostname, None, socket.AF_INET):
-            ip = info[4][0]
-            if ip.startswith("127."):
-                continue
-            candidates.append(ip)
-    except OSError:
-        pass
-    for prefix in ("192.168.", "10."):
-        for ip in candidates:
-            if ip.startswith(prefix):
-                return ip
-    if candidates:
-        return candidates[0]
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
-    except OSError:
-        return "localhost"
+    append_notification(notification)
+    return jsonify({"notification": notification}), 201
 
 
 if __name__ == "__main__":
-    ip = get_local_ip()
     print("\n========================================")
-    print("  Media Screenshot App is running!")
+    print("  支部/小组通知网页已启动")
     print("========================================")
-    print(f"  On this PC:    http://localhost:{PORT}")
-    print(f"  On your phone: http://{ip}:{PORT}")
-    print("  (Phone must be on the same Wi-Fi)")
+    print(f"  本机访问: http://localhost:{PORT}")
+    print("  局域网或公网部署后，手机浏览器打开同一地址即可添加到主屏幕")
     print("========================================\n")
-    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=False)
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)
