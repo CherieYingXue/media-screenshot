@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: branch-notice-pwa
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 server:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: NOTICES_DATA_DIR
+        value: /opt/render/project/src/data
