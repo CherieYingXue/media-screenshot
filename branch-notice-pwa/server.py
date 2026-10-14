@@ -123,7 +123,7 @@ def list_notifications():
     notifications = [
         item for item in load_notifications() if visible_to_group(item, group)
     ]
-    notifications.sort(key=lambda item: (item.get("pinned", False), item["createdAt"]), reverse=True)
+    notifications.sort(key=lambda item: item["createdAt"], reverse=True)
     return jsonify({"count": len(notifications), "notifications": notifications})
 
 
