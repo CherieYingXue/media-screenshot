@@ -2,1178 +2,411 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TT | 特朗普专题研究</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#b91c1c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="支部通知">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>支部通知</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
   <style>
     :root {
-      --bg: #07111f;
-      --panel: rgba(14, 24, 43, 0.86);
-      --panel-strong: rgba(18, 32, 56, 0.96);
-      --line: rgba(148, 163, 184, 0.18);
-      --muted: #8ea0ba;
-      --text: #edf4ff;
-      --accent: #60a5fa;
-      --accent-2: #f97316;
-      --green: #34d399;
-      --red: #fb7185;
-      --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+      --bg: #fff7ed;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #f3d6bf;
+      --red: #b91c1c;
+      --red-2: #ef4444;
+      --gold: #f59e0b;
+      --green: #16a34a;
+      --shadow: 0 18px 50px rgba(127, 29, 29, 0.14);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; }
 
     body {
+      margin: 0;
       min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at 12% 12%, rgba(59, 130, 246, 0.22), transparent 28%),
-        radial-gradient(circle at 86% 8%, rgba(249, 115, 22, 0.2), transparent 26%),
-        linear-gradient(135deg, #050914 0%, var(--bg) 48%, #0c1526 100%);
-      overflow-x: hidden;
+        radial-gradient(circle at top left, rgba(239, 68, 68, 0.16), transparent 34%),
+        linear-gradient(180deg, #fff7ed 0%, #fff 48%, #fff7ed 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     }
 
-    a { color: inherit; text-decoration: none; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { width: min(100%, 760px); margin: 0 auto; padding: 16px 14px 92px; }
 
-    .shell {
-      display: grid;
-      grid-template-columns: 248px minmax(0, 1fr);
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      padding: 18px;
-      background: rgba(5, 12, 25, 0.88);
-      border-right: 1px solid var(--line);
-      backdrop-filter: blur(22px);
-      transition: width 0.25s ease, padding 0.25s ease, transform 0.25s ease;
-      z-index: 10;
-      overflow-y: auto;
-    }
-
-    .shell.collapsed { grid-template-columns: 74px minmax(0, 1fr); }
-    .shell.collapsed .sidebar { padding: 18px 12px; }
-    .shell.collapsed .sidebar-content,
-    .shell.collapsed .brand-copy,
-    .shell.collapsed .collapse-label { display: none; }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .logo {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #2563eb, #f97316);
-      box-shadow: 0 12px 36px rgba(37, 99, 235, 0.36);
-      font-weight: 900;
-      letter-spacing: -0.08em;
-    }
-
-    .brand h1 { font-size: 1.05rem; letter-spacing: 0.01em; }
-    .brand p { margin-top: 2px; color: var(--muted); font-size: 0.76rem; }
-
-    .icon-button,
-    .tag-button,
-    .ask-button,
-    .more-button {
-      border: 0;
-      cursor: pointer;
-      color: var(--text);
-      font: inherit;
-    }
-
-    .icon-button {
-      display: inline-grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      margin-bottom: 22px;
-      border-radius: 14px;
-      background: rgba(148, 163, 184, 0.12);
-      border: 1px solid var(--line);
-    }
-
-    .sidebar-section {
-      padding: 16px;
-      margin-bottom: 16px;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      background: rgba(15, 23, 42, 0.64);
-    }
-
-    .sidebar-section h2 {
-      margin-bottom: 12px;
-      font-size: 0.82rem;
-      color: #cbd5e1;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .tag-list { display: grid; gap: 9px; }
-
-    .tag-button {
-      width: 100%;
-      padding: 10px 12px;
-      text-align: left;
-      border-radius: 14px;
-      background: rgba(37, 99, 235, 0.13);
-      border: 1px solid rgba(96, 165, 250, 0.22);
-      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-    }
-
-    .tag-button:hover {
-      transform: translateY(-1px);
-      border-color: rgba(96, 165, 250, 0.6);
-      background: rgba(37, 99, 235, 0.22);
-    }
-
-    .history-list {
-      display: grid;
-      gap: 10px;
-      list-style: none;
-      color: #dbeafe;
-      font-size: 0.86rem;
-    }
-
-    .history-list li {
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .history-list time {
-      display: block;
-      margin-bottom: 3px;
-      color: var(--muted);
-      font-size: 0.72rem;
-    }
-
-    .history-hidden { display: none; }
-
-    .more-button {
-      width: 100%;
-      margin-top: 12px;
-      padding: 9px 12px;
-      border-radius: 13px;
-      background: rgba(249, 115, 22, 0.16);
-      border: 1px solid rgba(249, 115, 22, 0.28);
-    }
-
-    .main {
-      display: grid;
-      grid-template-rows: minmax(150px, 20vh) 1fr;
-      min-width: 0;
-    }
-
-    .hero {
+    .top {
       position: sticky;
       top: 0;
       z-index: 5;
-      display: grid;
-      align-content: center;
-      gap: 16px;
-      padding: 22px clamp(16px, 3vw, 36px);
-      background: linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(7, 17, 31, 0.82));
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(20px);
+      margin: 0 -14px 14px;
+      padding: calc(10px + env(safe-area-inset-top)) 14px 14px;
+      background: rgba(255, 247, 237, 0.9);
+      border-bottom: 1px solid rgba(185, 28, 28, 0.1);
+      backdrop-filter: blur(18px);
     }
 
-    .hero > * {
-      width: min(100%, 1120px);
-      margin-inline: auto;
-    }
-
-    .hero-top {
+    .brand-row, .section-title, .notice-meta, .chips, .actions {
       display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 18px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      color: #bfdbfe;
-      font-size: 0.8rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      gap: 10px;
     }
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--green);
-      box-shadow: 0 0 20px var(--green);
-    }
-
-    .hero h2 {
-      font-size: clamp(1.6rem, 2.6vw, 2.8rem);
-      line-height: 1;
-      letter-spacing: -0.06em;
-    }
-
-    .hero-meta {
-      color: var(--muted);
-      font-size: 0.9rem;
-      text-align: right;
-    }
-
-    .ask-bar {
+    .brand-row { justify-content: space-between; }
+    .logo {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      padding: 8px;
-      border: 1px solid rgba(96, 165, 250, 0.32);
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      box-shadow: 0 12px 28px rgba(185, 28, 28, 0.3);
+      font-weight: 900;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 1.22rem; }
+    .subtitle { margin-top: 3px; color: var(--muted); font-size: 0.84rem; }
+
+    .badge {
+      min-width: 30px;
+      height: 30px;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--red-2);
+      display: inline-grid;
+      place-items: center;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(239, 68, 68, 0.3);
+    }
+
+    .panel, .notice {
+      padding: 16px;
+      border: 1px solid var(--line);
       border-radius: 24px;
-      background: rgba(15, 23, 42, 0.82);
+      background: rgba(255, 255, 255, 0.9);
       box-shadow: var(--shadow);
     }
 
-    .ask-bar input {
-      min-width: 0;
-      padding: 13px 16px;
-      color: var(--text);
-      background: transparent;
-      border: 0;
-      outline: 0;
-      font-size: 1rem;
-    }
+    .panel { margin-bottom: 14px; }
+    .section-title { justify-content: space-between; margin-bottom: 12px; }
+    .section-title h2 { font-size: 1.06rem; }
+    .hint { color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
 
-    .ask-bar input::placeholder { color: #718096; }
-
-    .ask-button {
-      padding: 0 22px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #2563eb, #f97316);
-      font-weight: 800;
-      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.26);
-    }
-
-    .content {
-      width: min(100%, 1120px);
-      margin-inline: auto;
-      padding: 24px clamp(14px, 3vw, 32px) 48px;
-    }
-
-    .grid {
+    .role-grid, .group-grid, .filter-grid {
       display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      position: relative;
-      overflow: hidden;
-      padding: 20px;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      background: var(--panel);
-      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2);
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 32%);
-    }
-
-    .span-8 { grid-column: span 8; }
-    .span-7 { grid-column: span 7; }
-    .span-6 { grid-column: span 6; }
-    .span-5 { grid-column: span 5; }
-    .span-4 { grid-column: span 4; }
-    .span-12 { grid-column: span 12; }
-
-    .section-head {
-      position: relative;
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .section-head h3 {
-      font-size: 1.16rem;
-      letter-spacing: -0.02em;
-    }
-
-    .section-head p {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 0.86rem;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      color: #dbeafe;
-      background: rgba(96, 165, 250, 0.15);
-      border: 1px solid rgba(96, 165, 250, 0.26);
-      font-size: 0.76rem;
-      white-space: nowrap;
-    }
-
-    .tool-controls {
-      position: relative;
-      display: grid;
-      grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(120px, 0.7fr)) auto auto auto;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-top: 12px;
     }
 
-    .tool-controls input,
-    .tool-controls select,
-    .research-notes {
-      width: 100%;
-      color: var(--text);
-      background: rgba(6, 13, 27, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 14px;
-      outline: 0;
-      font: inherit;
-    }
+    .role-grid { grid-template-columns: 1fr; }
+    .group-grid, .filter-grid { grid-template-columns: repeat(3, 1fr); }
 
-    .tool-controls input,
-    .tool-controls select {
-      min-height: 44px;
-      padding: 0 12px;
-    }
-
-    .tool-button {
-      min-height: 44px;
-      padding: 0 14px;
-      color: var(--text);
-      background: rgba(96, 165, 250, 0.16);
-      border: 1px solid rgba(96, 165, 250, 0.28);
-      border-radius: 14px;
-      cursor: pointer;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .tool-button.secondary {
-      background: rgba(249, 115, 22, 0.15);
-      border-color: rgba(249, 115, 22, 0.28);
-    }
-
-    .tool-stats {
-      position: relative;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 14px;
-      color: var(--muted);
-      font-size: 0.82rem;
-    }
-
-    .results-list {
+    .choice {
       position: relative;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .result-card {
-      display: grid;
-      gap: 8px;
-      padding: 14px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .result-card h4 {
-      font-size: 0.98rem;
-      color: #f8fafc;
-    }
-
-    .result-card p {
-      color: #b6c5d8;
-      font-size: 0.88rem;
-      line-height: 1.58;
-    }
-
-    .result-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .result-tags span {
-      padding: 4px 7px;
-      border-radius: 999px;
-      color: #c7d2fe;
-      background: rgba(99, 102, 241, 0.15);
-      font-size: 0.72rem;
-    }
-
-    .research-notes {
-      position: relative;
-      min-height: 92px;
+      gap: 4px;
+      min-height: 58px;
       padding: 12px;
-      resize: vertical;
-    }
-
-    .timeline {
-      position: relative;
-      display: grid;
-      gap: 14px;
-    }
-
-    .timeline-item,
-    .source-row {
-      position: relative;
-      display: grid;
-      gap: 8px;
-      padding: 16px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .timeline-item strong,
-    .source-row strong {
-      color: #f8fafc;
-      font-size: 0.96rem;
-    }
-
-    .timeline-item p,
-    .source-row p,
-    .poll-note {
-      color: #b6c5d8;
-      line-height: 1.65;
-      font-size: 0.9rem;
-    }
-
-    .meta-line {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.76rem;
-    }
-
-    .source-link {
-      color: #93c5fd;
-      font-weight: 700;
-    }
-
-    .source-link:hover { text-decoration: underline; }
-
-    .schedule-board {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .schedule-card {
-      padding: 16px;
-      border-radius: 22px;
-      background: rgba(6, 13, 27, 0.58);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-    }
-
-    .schedule-card b {
-      display: block;
-      margin-bottom: 10px;
-      color: #fef3c7;
-    }
-
-    .schedule-card ul {
-      display: grid;
-      gap: 10px;
-      padding-left: 17px;
-      color: #cbd5e1;
-      line-height: 1.55;
-      font-size: 0.88rem;
-    }
-
-    .poll-chart {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .poll-row {
-      display: grid;
-      grid-template-columns: 150px minmax(120px, 1fr) 58px;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .poll-source {
-      color: var(--muted);
-      font-size: 0.86rem;
-      font-weight: 700;
-    }
-
-    .bar-track {
-      height: 12px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.16);
-    }
-
-    .bar-fill {
-      display: block;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #60a5fa, #f97316);
-    }
-
-    .poll-value {
-      color: #f8fafc;
-      font-size: 1rem;
-      font-weight: 900;
-      text-align: right;
-    }
-
-    .sentiment-map {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 14px;
-    }
-
-    .region {
-      padding: 16px;
-      border-radius: 22px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .region h4 { margin-bottom: 10px; }
-
-    .region ul {
-      display: grid;
-      gap: 11px;
-      list-style: none;
-      color: #cbd5e1;
-      font-size: 0.88rem;
-      line-height: 1.58;
-    }
-
-    .region li::before {
-      content: "•";
-      margin-right: 8px;
-      color: var(--accent-2);
-    }
-
-    .answer-panel {
-      display: none;
-      margin-top: 14px;
-      padding: 14px 16px;
+      border: 1px solid #fed7aa;
       border-radius: 18px;
-      color: #dbeafe;
-      background: rgba(37, 99, 235, 0.12);
-      border: 1px solid rgba(96, 165, 250, 0.24);
+      background: #fffaf5;
+    }
+
+    .choice input { position: absolute; inset: 0; opacity: 0; }
+    .choice strong { font-size: 0.95rem; }
+    .choice span { color: var(--muted); font-size: 0.78rem; }
+    .choice:has(input:checked), .chip.active {
+      border-color: rgba(185, 28, 28, 0.58);
+      background: #fff1f2;
+      box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.18);
+    }
+
+    .button {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 17px;
+      color: #fff;
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      font-weight: 850;
+      box-shadow: 0 14px 30px rgba(185, 28, 28, 0.25);
+    }
+
+    .button.secondary {
+      color: var(--red);
+      background: #fff7ed;
+      border: 1px solid #fecaca;
+      box-shadow: none;
+    }
+
+    .button.ghost {
+      color: var(--text);
+      background: #fff;
+      border: 1px solid #fed7aa;
+      box-shadow: none;
+    }
+
+    .profile-summary {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 18px;
+      background: #fff7ed;
+      color: #7f1d1d;
+      font-size: 0.88rem;
       line-height: 1.6;
     }
 
-    .answer-panel.show { display: block; }
+    .composer { display: none; }
+    .form { display: grid; gap: 10px; }
+    .field {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px;
+      border: 1px solid #fed7aa;
+      border-radius: 16px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
 
-    .footer-note {
-      margin-top: 24px;
+    textarea.field { min-height: 108px; resize: vertical; line-height: 1.55; }
+
+    .chips { flex-wrap: wrap; }
+    .chip {
+      border: 1px solid #fed7aa;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .notice-list { display: grid; gap: 12px; }
+    .notice { position: relative; overflow: hidden; }
+    .notice.unread::before {
+      content: "";
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red-2);
+      box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.12);
+    }
+
+    .notice h3 {
+      padding-right: 22px;
+      font-size: 1.05rem;
+      line-height: 1.35;
+    }
+
+    .notice p {
+      margin-top: 10px;
+      color: #374151;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .notice-meta {
+      flex-wrap: wrap;
+      margin-top: 12px;
       color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .tag {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-weight: 700;
+    }
+
+    .tag.branch { color: #991b1b; background: #fee2e2; }
+    .tag.group { color: #166534; background: #dcfce7; }
+    .tag.pin { color: #92400e; background: #fef3c7; }
+
+    .empty {
+      padding: 24px 14px;
       text-align: center;
-      font-size: 0.82rem;
+      color: var(--muted);
+      border: 1px dashed #fdba74;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.68);
     }
 
-    @media (max-width: 1100px) {
-      .shell,
-      .shell.collapsed { grid-template-columns: 1fr; }
-      .sidebar {
-        position: fixed;
-        width: min(320px, 90vw);
-        transform: translateX(-102%);
-      }
-      .shell.sidebar-open .sidebar { transform: translateX(0); }
-      .shell.collapsed .sidebar-content,
-      .shell.collapsed .brand-copy,
-      .shell.collapsed .collapse-label { display: block; }
-      .mobile-menu { display: inline-grid; }
-      .span-8,
-      .span-7,
-      .span-6,
-      .span-5,
-      .span-4 { grid-column: span 12; }
-      .schedule-board,
-      .poll-chart,
-      .sentiment-map { grid-template-columns: 1fr; }
-      .tool-controls { grid-template-columns: 1fr 1fr; }
-      .tool-controls input { grid-column: 1 / -1; }
-      .hero { position: relative; }
+    .toast {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      z-index: 10;
+      display: none;
+      padding: 13px 14px;
+      border-radius: 18px;
+      color: #fff;
+      background: rgba(31, 41, 55, 0.94);
+      text-align: center;
     }
 
-    @media (min-width: 1101px) {
-      .mobile-menu { display: none; }
+    .install-tip {
+      margin-top: 10px;
+      color: #92400e;
+      font-size: 0.8rem;
+      line-height: 1.55;
     }
 
-    @media (max-width: 680px) {
-      .main { grid-template-rows: auto 1fr; }
-      .hero-top { align-items: start; flex-direction: column; }
-      .hero-meta { text-align: left; }
-      .ask-bar { grid-template-columns: 1fr; border-radius: 22px; }
-      .ask-button { min-height: 48px; }
-      .content { padding-inline: 14px; }
-      .card { padding: 18px; border-radius: 22px; }
-      .poll-row {
-        grid-template-columns: 1fr 54px;
-        gap: 8px 12px;
-      }
-      .bar-track { grid-column: 1 / -1; }
-      .tool-controls { grid-template-columns: 1fr; }
+    @media (min-width: 640px) {
+      .role-grid { grid-template-columns: repeat(3, 1fr); }
+      .actions { justify-content: flex-end; }
+      .actions .button { width: auto; padding: 0 18px; }
     }
   </style>
 </head>
 <body>
-  <div class="shell" id="shell">
-    <aside class="sidebar" aria-label="研究功能栏目">
-      <button class="icon-button" id="collapseSidebar" type="button" aria-label="隐藏或展开左侧栏目">
-        <span class="collapse-label">收起</span>
-        <span aria-hidden="true">☰</span>
-      </button>
-
-      <div class="brand">
-        <div class="logo">TT</div>
-        <div class="brand-copy">
-          <h1>特朗普专题</h1>
-          <p>研究标签 · 问答历史 · 信源追踪</p>
-        </div>
-      </div>
-
-      <div class="sidebar-content">
-        <section class="sidebar-section">
-          <h2>研究标签</h2>
-          <div class="tag-list">
-            <button class="tag-button" type="button" data-question="当日特朗普有哪些涉华表态？">当日涉华表态</button>
-            <button class="tag-button" type="button" data-question="特朗普近期日程和到访地点有哪些？">近期日程与动向</button>
-            <button class="tag-button" type="button" data-question="当前美国主要民调如何评价特朗普？">主要民调支持率</button>
-            <button class="tag-button" type="button" data-question="全球主要地区和国家的主要媒体如何报道特朗普？">全球主要媒体报道</button>
-            <button class="tag-button" type="button" data-question="中美经贸、关税和科技管制相关表态有什么变化？">中美经贸与科技</button>
-          </div>
-        </section>
-
-        <section class="sidebar-section">
-          <h2>问答历史</h2>
-          <ul class="history-list" id="historyList">
-            <li><time>09:42</time>当日涉华表态有哪些？</li>
-            <li><time>09:18</time>白宫今天的公开日程是什么？</li>
-            <li><time>昨天</time>摇摆州民调变化如何？</li>
-            <li><time>昨天</time>日本媒体近期报道重点？</li>
-            <li><time>周三</time>关税政策最新说法？</li>
-            <li><time>周三</time>俄媒如何解读其外交路线？</li>
-            <li><time>周二</time>欧洲媒体报道倾向？</li>
-            <li><time>周二</time>拉美媒体关注议题？</li>
-            <li><time>周一</time>韩国媒体关键词？</li>
-            <li><time>周一</time>美国国内媒体头条概览？</li>
-            <li class="history-hidden"><time>更早</time>中东媒体报道脉络？</li>
-            <li class="history-hidden"><time>更早</time>科技企业政策信号？</li>
-          </ul>
-          <button class="more-button" id="moreHistory" type="button">更多</button>
-        </section>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="hero">
-        <div class="hero-top">
-          <button class="icon-button mobile-menu" id="mobileMenu" type="button" aria-label="打开左侧栏目">☰</button>
+  <main class="app">
+    <header class="top">
+      <div class="brand-row">
+        <div class="brand-row">
+          <div class="logo">通</div>
           <div>
-            <div class="eyebrow"><span class="dot"></span> TT Intelligence Desk</div>
-            <h2>TT · 特朗普专题研究</h2>
-          </div>
-          <div class="hero-meta">
-            <div>研究工具：涉华表态 / 日程 / 民调 / 全球主要媒体报道</div>
-            <div>更新节奏：24小时 · 近一周 · 更长周期</div>
+            <h1>支部通知</h1>
+            <p class="subtitle">手机查看 · 主屏幕入口 · 新通知角标</p>
           </div>
         </div>
+        <div class="badge" id="unreadBadge" aria-label="未读通知数量">0</div>
+      </div>
+    </header>
 
-        <form class="ask-bar" id="askForm">
-          <input id="questionInput" type="search" placeholder="输入想问的问题，例如：过去一周特朗普关于中国说了什么？" autocomplete="off">
-          <button class="ask-button" type="submit">智能问答</button>
-        </form>
-        <div class="answer-panel" id="answerPanel"></div>
-      </header>
-
-      <section class="content">
-        <div class="grid">
-          <article class="card span-6" id="china-statements">
-            <div class="section-head">
-              <div>
-                <h3>最新涉华表态</h3>
-                <p>按当日、过去一周和更长时间组织，用于承接网络采集结果。</p>
-              </div>
-              <span class="pill">China Watch</span>
-            </div>
-            <div class="timeline">
-              <div class="timeline-item">
-                <div class="meta-line"><span>当日</span><span>待接入实时抓取</span></div>
-                <strong>涉华贸易、关税、科技竞争相关表态入口</strong>
-                <p>页面为实时采集留出摘要位，可在此显示原文摘录、中文摘要、情绪标签和事实核验提示。</p>
-                <div class="meta-line">信源：
-                  <a class="source-link" href="https://www.whitehouse.gov/briefing-room/" target="_blank" rel="noreferrer">白宫简报室</a>
-                  <a class="source-link" href="https://www.reuters.com/world/us/" target="_blank" rel="noreferrer">Reuters US</a>
-                </div>
-              </div>
-              <div class="timeline-item">
-                <div class="meta-line"><span>过去一周</span><span>竞选/行政讲话 · 采访 · 社媒</span></div>
-                <strong>中美关系、对华政策和产业政策表态归档</strong>
-                <p>以时间线呈现多信源报道，并标注“直接引语”“转述报道”“评论分析”等类型。</p>
-                <div class="meta-line">信源：
-                  <a class="source-link" href="https://apnews.com/hub/donald-trump" target="_blank" rel="noreferrer">AP Trump Hub</a>
-                  <a class="source-link" href="https://www.politico.com/news/donald-trump" target="_blank" rel="noreferrer">Politico</a>
-                </div>
-              </div>
-              <div class="timeline-item">
-                <div class="meta-line"><span>更长时间</span><span>政策演变</span></div>
-                <strong>历史表态对照：贸易、台湾、TikTok、芯片与盟友政策</strong>
-                <p>适合放置趋势图、关键词云和原文链接，帮助研究者快速比对口径变化。</p>
-                <div class="meta-line">信源：
-                  <a class="source-link" href="https://www.c-span.org/search/?searchtype=All&query=Donald+Trump+China" target="_blank" rel="noreferrer">C-SPAN</a>
-                  <a class="source-link" href="https://www.presidency.ucsb.edu/advanced-search" target="_blank" rel="noreferrer">American Presidency Project</a>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card span-6" id="schedule">
-            <div class="section-head">
-              <div>
-                <h3>近期日程</h3>
-                <p>合并官方日程和媒体报道的到访地点。</p>
-              </div>
-              <span class="pill">Daily Track</span>
-            </div>
-            <div class="schedule-board">
-              <div class="schedule-card">
-                <b>当日</b>
-                <ul>
-                  <li><a class="source-link" href="https://www.whitehouse.gov/briefing-room/statements-releases/" target="_blank" rel="noreferrer">白宫官网</a>公开日程与声明</li>
-                  <li>媒体跟踪：公开活动、会见、讲话地点</li>
-                </ul>
-              </div>
-              <div class="schedule-card">
-                <b>过去一周</b>
-                <ul>
-                  <li>按日期罗列行程、讲话和采访</li>
-                  <li>标记每条信息的媒体信源和可信等级</li>
-                </ul>
-              </div>
-              <div class="schedule-card">
-                <b>更长时间</b>
-                <ul>
-                  <li>按州、城市、国家和议题聚合</li>
-                  <li>支持查看外交、竞选、经济议题路径</li>
-                </ul>
-              </div>
-            </div>
-          </article>
-
-          <article class="card span-12" id="polls">
-            <div class="section-head">
-              <div>
-                <h3>民调数据</h3>
-                <p>用条状图显示不同机构的支持率数字，点击机构可跳转原网页。</p>
-              </div>
-              <span class="pill">Polling Snapshot</span>
-            </div>
-            <div class="poll-chart" aria-label="特朗普民调支持率条状图">
-              <a class="poll-row" href="https://projects.fivethirtyeight.com/polls/approval/donald-trump/" target="_blank" rel="noreferrer">
-                <span class="poll-source">FiveThirtyEight</span>
-                <span class="bar-track"><span class="bar-fill" style="width: 45%;"></span></span>
-                <span class="poll-value">45%</span>
-              </a>
-              <a class="poll-row" href="https://www.realclearpolitics.com/epolls/latest_polls/" target="_blank" rel="noreferrer">
-                <span class="poll-source">RealClearPolitics</span>
-                <span class="bar-track"><span class="bar-fill" style="width: 44%;"></span></span>
-                <span class="poll-value">44%</span>
-              </a>
-              <a class="poll-row" href="https://today.yougov.com/topics/politics" target="_blank" rel="noreferrer">
-                <span class="poll-source">YouGov</span>
-                <span class="bar-track"><span class="bar-fill" style="width: 42%;"></span></span>
-                <span class="poll-value">42%</span>
-              </a>
-              <a class="poll-row" href="https://www.reuters.com/world/us/" target="_blank" rel="noreferrer">
-                <span class="poll-source">Reuters/Ipsos</span>
-                <span class="bar-track"><span class="bar-fill" style="width: 41%;"></span></span>
-                <span class="poll-value">41%</span>
-              </a>
-              <a class="poll-row" href="https://poll.qu.edu/" target="_blank" rel="noreferrer">
-                <span class="poll-source">Quinnipiac</span>
-                <span class="bar-track"><span class="bar-fill" style="width: 40%;"></span></span>
-                <span class="poll-value">40%</span>
-              </a>
-              <a class="poll-row" href="https://emersoncollegepolling.com/" target="_blank" rel="noreferrer">
-                <span class="poll-source">Emerson</span>
-                <span class="bar-track"><span class="bar-fill" style="width: 46%;"></span></span>
-                <span class="poll-value">46%</span>
-              </a>
-            </div>
-            <p class="poll-note">以上为条状图展示样式；接入采集后，数值可自动替换为各机构最新支持率、调查日期和样本量。</p>
-          </article>
-
-          <article class="card span-12" id="research-tool">
-            <div class="section-head">
-              <div>
-                <h3>研究检索台</h3>
-                <p>可按关键词、地区、时间和主题筛选信源；问答结果、历史和笔记保存在本机浏览器。</p>
-              </div>
-              <span class="pill">Usable Research Tool</span>
-            </div>
-            <div class="tool-controls">
-              <input id="sourceSearch" type="search" placeholder="检索关键词：China、tariff、poll、Europe、移民、司法..." autocomplete="off">
-              <select id="regionFilter" aria-label="地区筛选">
-                <option value="all">全部地区</option>
-              </select>
-              <select id="timeFilter" aria-label="时间筛选">
-                <option value="all">全部时间</option>
-              </select>
-              <select id="topicFilter" aria-label="主题筛选">
-                <option value="all">全部主题</option>
-              </select>
-              <button class="tool-button" id="refreshLive" type="button">刷新实时新闻</button>
-              <button class="tool-button" id="exportReport" type="button">导出摘要</button>
-              <button class="tool-button secondary" id="clearHistory" type="button">清空历史</button>
-            </div>
-            <div class="tool-stats">
-              <span id="matchCount">正在载入信源...</span>
-              <span id="activeFilters"></span>
-              <span id="liveStatus">实时新闻待刷新</span>
-            </div>
-            <div class="results-list" id="sourceResults"></div>
-            <div class="results-list" id="liveNewsResults" aria-live="polite"></div>
-            <textarea class="research-notes" id="researchNotes" placeholder="研究笔记：可记录判断、待核实问题、交叉信源线索，内容自动保存在本机浏览器。"></textarea>
-          </article>
-
-          <article class="card span-12" id="global-sentiment">
-            <div class="section-head">
-              <div>
-                <h3>全球主要媒体报道</h3>
-                <p>这里的“全球舆情”指全球主要地区和国家的主流媒体关于特朗普的报道，而不是泛泛的国际舆论。</p>
-              </div>
-              <span class="pill">Global Trump Coverage</span>
-            </div>
-            <div class="sentiment-map">
-              <div class="region">
-                <h4>美国主要媒体对特朗普的报道</h4>
-                <ul>
-                  <li><a class="source-link" href="https://www.nytimes.com/topic/person/donald-trump" target="_blank" rel="noreferrer">New York Times</a>：政策、司法和选举叙事</li>
-                  <li><a class="source-link" href="https://www.washingtonpost.com/donald-trump/" target="_blank" rel="noreferrer">Washington Post</a>：白宫、国会和制度议题</li>
-                  <li><a class="source-link" href="https://www.wsj.com/topics/person/donald-trump" target="_blank" rel="noreferrer">Wall Street Journal</a>：市场、贸易和商业影响</li>
-                  <li><a class="source-link" href="https://www.foxnews.com/category/person/donald-trump" target="_blank" rel="noreferrer">Fox News</a>：保守派受众议题</li>
-                  <li><a class="source-link" href="https://www.cnn.com/politics/donald-trump" target="_blank" rel="noreferrer">CNN</a>：行政与政治风险</li>
-                  <li><a class="source-link" href="https://www.nbcnews.com/politics/donald-trump" target="_blank" rel="noreferrer">NBC News</a>：民调、竞选和政策执行</li>
-                  <li><a class="source-link" href="https://www.axios.com/politics-policy/donald-trump" target="_blank" rel="noreferrer">Axios</a>：短讯式政策信号和权力网络</li>
-                  <li><a class="source-link" href="https://apnews.com/hub/donald-trump" target="_blank" rel="noreferrer">AP</a>：事实报道和全国性事件追踪</li>
-                </ul>
-              </div>
-              <div class="region">
-                <h4>欧洲主要媒体对特朗普的报道</h4>
-                <ul>
-                  <li><a class="source-link" href="https://www.bbc.com/news/topics/cp7r8vgl2rgt/donald-trump" target="_blank" rel="noreferrer">BBC</a>：英欧安全与贸易影响</li>
-                  <li><a class="source-link" href="https://www.theguardian.com/us-news/donaldtrump" target="_blank" rel="noreferrer">The Guardian</a>：民主制度与社会议题</li>
-                  <li><a class="source-link" href="https://www.ft.com/trump" target="_blank" rel="noreferrer">Financial Times</a>：金融市场、贸易与产业政策</li>
-                  <li><a class="source-link" href="https://www.economist.com/topics/donald-trump" target="_blank" rel="noreferrer">The Economist</a>：自由主义视角与制度分析</li>
-                  <li><a class="source-link" href="https://www.lemonde.fr/en/search/?search_keywords=Trump" target="_blank" rel="noreferrer">Le Monde</a>：法国和欧盟政策语境</li>
-                  <li><a class="source-link" href="https://www.dw.com/en/search/trump" target="_blank" rel="noreferrer">Deutsche Welle</a>：德国和欧洲公共媒体视角</li>
-                  <li><a class="source-link" href="https://www.politico.eu/search/?q=Trump" target="_blank" rel="noreferrer">Politico Europe</a>：欧盟政治和跨大西洋关系</li>
-                </ul>
-              </div>
-              <div class="region">
-                <h4>俄罗斯主要媒体对特朗普的报道</h4>
-                <ul>
-                  <li><a class="source-link" href="https://tass.com/search?searchStr=Trump" target="_blank" rel="noreferrer">TASS</a>：官方通讯社视角</li>
-                  <li><a class="source-link" href="https://www.interfax.com/search/?query=Trump" target="_blank" rel="noreferrer">Interfax</a>：外交和安全议题快讯</li>
-                  <li><a class="source-link" href="https://www.kommersant.ru/search/results?search_query=Trump" target="_blank" rel="noreferrer">Kommersant</a>：俄国内政治与商业语境</li>
-                  <li><a class="source-link" href="https://www.themoscowtimes.com/search?query=Trump" target="_blank" rel="noreferrer">Moscow Times</a>：英文独立媒体观察</li>
-                  <li><a class="source-link" href="https://www.rt.com/search?q=Trump" target="_blank" rel="noreferrer">RT</a>：国际传播与叙事框架</li>
-                </ul>
-              </div>
-              <div class="region">
-                <h4>日本 / 韩国主要媒体对特朗普的报道</h4>
-                <ul>
-                  <li><a class="source-link" href="https://www3.nhk.or.jp/nhkworld/en/news/tags/80/" target="_blank" rel="noreferrer">NHK</a>：同盟、安全与经济议题</li>
-                  <li><a class="source-link" href="https://www.japantimes.co.jp/tag/donald-trump/" target="_blank" rel="noreferrer">Japan Times</a>：区域影响分析</li>
-                  <li><a class="source-link" href="https://en.yna.co.kr/search/index?query=Trump" target="_blank" rel="noreferrer">Yonhap</a>：半岛安全和韩美关系</li>
-                </ul>
-              </div>
-              <div class="region">
-                <h4>拉美主要媒体对特朗普的报道</h4>
-                <ul>
-                  <li><a class="source-link" href="https://www.reuters.com/world/americas/" target="_blank" rel="noreferrer">Reuters Americas</a>：移民、贸易与外交</li>
-                  <li><a class="source-link" href="https://english.elpais.com/search/trump/" target="_blank" rel="noreferrer">El Pais</a>：西语世界观察</li>
-                  <li><a class="source-link" href="https://www.bbc.com/mundo/search?q=Trump" target="_blank" rel="noreferrer">BBC Mundo</a>：拉美公众议题和移民政策</li>
-                  <li><a class="source-link" href="https://www1.folha.uol.com.br/search/?q=Trump" target="_blank" rel="noreferrer">Folha de S.Paulo</a>：巴西政治和经贸视角</li>
-                  <li><a class="source-link" href="https://oglobo.globo.com/busca/?q=Trump" target="_blank" rel="noreferrer">O Globo</a>：巴西主流媒体观察</li>
-                  <li><a class="source-link" href="https://www.clarin.com/buscador/?q=Trump" target="_blank" rel="noreferrer">Clarin</a>：阿根廷媒体视角</li>
-                  <li><a class="source-link" href="https://www.eluniversal.com.mx/buscador/?query=Trump" target="_blank" rel="noreferrer">El Universal</a>：墨西哥边境、贸易和移民议题</li>
-                </ul>
-              </div>
-              <div class="region">
-                <h4>中东主要媒体对特朗普的报道</h4>
-                <ul>
-                  <li><a class="source-link" href="https://www.aljazeera.com/tag/donald-trump/" target="_blank" rel="noreferrer">Al Jazeera</a>：地区冲突与外交政策</li>
-                  <li><a class="source-link" href="https://www.thenationalnews.com/search/?query=Trump" target="_blank" rel="noreferrer">The National</a>：海湾国家视角</li>
-                </ul>
-              </div>
-              <div class="region">
-                <h4>研究输出</h4>
-                <ul>
-                  <li>每条具体信息显示媒体、日期、地区、主题标签</li>
-                  <li>点击信源名称跳转原网页，保留可审计链路</li>
-                </ul>
-              </div>
-            </div>
-          </article>
-
+    <section class="panel" aria-labelledby="loginTitle">
+      <div class="section-title">
+        <div>
+          <h2 id="loginTitle">登录身份</h2>
+          <p class="hint">请选择一个或多个身份，并选择所在小组。</p>
         </div>
-        <p class="footer-note">TT 页面是可用的前端研究工具：支持本地检索、筛选、问答摘要、历史记录、研究笔记和导出；所有外链均跳转到对应公开信源页面。</p>
-      </section>
-    </main>
-  </div>
+      </div>
+      <div class="role-grid" id="roleGrid">
+        <label class="choice">
+          <input type="checkbox" value="支部通知管理员">
+          <strong>支部通知管理员</strong>
+          <span>可发布全体可见的支部通知</span>
+        </label>
+        <label class="choice">
+          <input type="checkbox" value="小组通知管理员">
+          <strong>小组通知管理员</strong>
+          <span>可发布本小组可见的小组通知</span>
+        </label>
+        <label class="choice">
+          <input type="checkbox" value="订阅者">
+          <strong>订阅者</strong>
+          <span>查看支部通知和本小组通知</span>
+        </label>
+      </div>
+      <div class="group-grid" id="groupGrid" aria-label="选择小组"></div>
+      <div class="actions" style="margin-top: 12px;">
+        <button class="button" id="saveProfile" type="button">进入通知页</button>
+        <button class="button secondary" id="resetProfile" type="button">重新选择</button>
+      </div>
+      <div class="profile-summary" id="profileSummary"></div>
+      <p class="install-tip">添加到主屏幕：手机浏览器打开本页后，使用浏览器菜单中的“添加到主屏幕”。应用会尝试用浏览器 Badging API 在图标上显示未读数量；不支持时会用页面标题和站点图标提示。</p>
+    </section>
+
+    <section class="panel composer" id="composerPanel" aria-labelledby="composerTitle">
+      <div class="section-title">
+        <div>
+          <h2 id="composerTitle">发布通知</h2>
+          <p class="hint">支部通知所有人可见；小组通知仅当前小组可见。</p>
+        </div>
+      </div>
+      <form class="form" id="noticeForm">
+        <select class="field" id="noticeType" aria-label="通知类型"></select>
+        <input class="field" id="noticeTitle" maxlength="80" placeholder="通知标题" required>
+        <textarea class="field" id="noticeContent" maxlength="2000" placeholder="通知内容" required></textarea>
+        <label class="choice">
+          <input type="checkbox" id="noticePinned">
+          <strong>置顶通知</strong>
+          <span>重要事项优先显示</span>
+        </label>
+        <button class="button" type="submit">发布</button>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="noticeTitleBlock">
+      <div class="section-title">
+        <div>
+          <h2 id="noticeTitleBlock">通知列表</h2>
+          <p class="hint" id="noticeScope">请先选择身份和小组。</p>
+        </div>
+      </div>
+      <div class="filter-grid" id="filterGrid">
+        <button class="chip active" type="button" data-filter="all">全部</button>
+        <button class="chip" type="button" data-filter="branch">支部通知</button>
+        <button class="chip" type="button" data-filter="group">小组通知</button>
+      </div>
+      <div class="actions" style="margin: 12px 0;">
+        <button class="button ghost" id="refreshNotices" type="button">刷新</button>
+        <button class="button secondary" id="markAllRead" type="button">全部已读</button>
+      </div>
+      <div class="notice-list" id="noticeList"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const shell = document.getElementById('shell');
-    const collapseSidebar = document.getElementById('collapseSidebar');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const askForm = document.getElementById('askForm');
-    const questionInput = document.getElementById('questionInput');
-    const answerPanel = document.getElementById('answerPanel');
-    const historyList = document.getElementById('historyList');
-    const moreHistory = document.getElementById('moreHistory');
-    const sourceSearch = document.getElementById('sourceSearch');
-    const regionFilter = document.getElementById('regionFilter');
-    const timeFilter = document.getElementById('timeFilter');
-    const topicFilter = document.getElementById('topicFilter');
-    const refreshLive = document.getElementById('refreshLive');
-    const exportReport = document.getElementById('exportReport');
-    const clearHistory = document.getElementById('clearHistory');
-    const matchCount = document.getElementById('matchCount');
-    const activeFilters = document.getElementById('activeFilters');
-    const liveStatus = document.getElementById('liveStatus');
-    const sourceResults = document.getElementById('sourceResults');
-    const liveNewsResults = document.getElementById('liveNewsResults');
-    const researchNotes = document.getElementById('researchNotes');
-
-    const STORAGE_KEYS = {
-      history: 'tt-question-history',
-      notes: 'tt-research-notes',
+    const STORAGE = {
+      profile: 'notice-profile-v1',
+      readIds: 'notice-read-ids-v1',
     };
+    const GROUPS = ['第一小组', '第二小组', '第三小组'];
+    const roleGrid = document.getElementById('roleGrid');
+    const groupGrid = document.getElementById('groupGrid');
+    const saveProfile = document.getElementById('saveProfile');
+    const resetProfile = document.getElementById('resetProfile');
+    const profileSummary = document.getElementById('profileSummary');
+    const composerPanel = document.getElementById('composerPanel');
+    const noticeForm = document.getElementById('noticeForm');
+    const noticeType = document.getElementById('noticeType');
+    const noticeTitle = document.getElementById('noticeTitle');
+    const noticeContent = document.getElementById('noticeContent');
+    const noticePinned = document.getElementById('noticePinned');
+    const noticeList = document.getElementById('noticeList');
+    const noticeScope = document.getElementById('noticeScope');
+    const unreadBadge = document.getElementById('unreadBadge');
+    const refreshNotices = document.getElementById('refreshNotices');
+    const markAllRead = document.getElementById('markAllRead');
+    const filterGrid = document.getElementById('filterGrid');
+    const toast = document.getElementById('toast');
 
-    const defaultHistory = [
-      '当日涉华表态有哪些？',
-      '白宫今天的公开日程是什么？',
-      '摇摆州民调变化如何？',
-      '日本媒体近期报道重点？',
-      '关税政策最新说法？',
-      '俄媒如何解读其外交路线？',
-      '欧洲媒体报道倾向？',
-      '拉美媒体关注议题？',
-      '韩国媒体关键词？',
-      '美国国内媒体头条概览？',
-    ];
+    let profile = loadJSON(STORAGE.profile, null);
+    let readIds = new Set(loadJSON(STORAGE.readIds, []));
+    let notices = [];
+    let activeFilter = 'all';
 
-    const researchItems = [
-      {
-        title: '白宫公开日程与声明',
-        source: 'White House',
-        region: '美国',
-        country: '美国',
-        time: '当日',
-        topics: ['日程', '官方声明'],
-        url: 'https://www.whitehouse.gov/briefing-room/',
-        summary: '核验特朗普当日公开行程、声明、行政动作和白宫发布的正式文本。',
-      },
-      {
-        title: '涉华政策与美国政治快讯',
-        source: 'Reuters US',
-        region: '美国',
-        country: '美国',
-        time: '当日',
-        topics: ['涉华表态', '贸易', '外交'],
-        url: 'https://www.reuters.com/world/us/',
-        summary: '跟踪特朗普涉华言论、贸易政策、对外政策和美国政治新闻。',
-      },
-      {
-        title: '特朗普专题事实报道',
-        source: 'Associated Press',
-        region: '美国',
-        country: '美国',
-        time: '近一周',
-        topics: ['综合报道', '司法', '选举'],
-        url: 'https://apnews.com/hub/donald-trump',
-        summary: '用于交叉核验美国国内事件、选举活动、司法进展和政策表述。',
-      },
-      {
-        title: '美国国内政治与政策叙事',
-        source: 'New York Times',
-        region: '美国',
-        country: '美国',
-        time: '近一周',
-        topics: ['政策', '司法', '选举'],
-        url: 'https://www.nytimes.com/topic/person/donald-trump',
-        summary: '观察自由派主流媒体关于特朗普政策、司法和制度风险的报道框架。',
-      },
-      {
-        title: '保守派媒体报道框架',
-        source: 'Fox News',
-        region: '美国',
-        country: '美国',
-        time: '近一周',
-        topics: ['国内政治', '选民基础', '媒体框架'],
-        url: 'https://www.foxnews.com/category/person/donald-trump',
-        summary: '观察保守派受众中关于特朗普的议题设置、政策强调和竞选叙事。',
-      },
-      {
-        title: '主要民调支持率趋势',
-        source: 'FiveThirtyEight',
-        region: '美国',
-        country: '美国',
-        time: '更长时间',
-        topics: ['民调', '支持率'],
-        url: 'https://projects.fivethirtyeight.com/polls/approval/donald-trump/',
-        summary: '查看不同机构民调的时间序列、支持率变化和样本背景。',
-      },
-      {
-        title: '欧洲公共媒体报道',
-        source: 'BBC',
-        region: '欧洲',
-        country: '英国',
-        time: '近一周',
-        topics: ['欧洲', '安全', '外交'],
-        url: 'https://www.bbc.com/news/topics/cp7r8vgl2rgt/donald-trump',
-        summary: '关注欧洲安全、英美关系、北约、贸易和跨大西洋议题中的特朗普报道。',
-      },
-      {
-        title: '欧洲商业与市场影响',
-        source: 'Financial Times',
-        region: '欧洲',
-        country: '英国',
-        time: '近一周',
-        topics: ['贸易', '金融市场', '产业政策'],
-        url: 'https://www.ft.com/trump',
-        summary: '用于研究特朗普政策对金融市场、关税、企业和全球供应链的影响。',
-      },
-      {
-        title: '欧盟政治观察',
-        source: 'Politico Europe',
-        region: '欧洲',
-        country: '欧盟',
-        time: '更长时间',
-        topics: ['欧盟', '外交', '安全'],
-        url: 'https://www.politico.eu/search/?q=Trump',
-        summary: '跟踪欧盟政治圈对特朗普外交路线、贸易政策和安全承诺的反应。',
-      },
-      {
-        title: '俄罗斯官方通讯社报道',
-        source: 'TASS',
-        region: '俄罗斯',
-        country: '俄罗斯',
-        time: '当日',
-        topics: ['俄罗斯', '外交', '安全'],
-        url: 'https://tass.com/search?searchStr=Trump',
-        summary: '观察俄罗斯官方叙事如何报道特朗普及其对俄美关系的影响。',
-      },
-      {
-        title: '俄罗斯商业与政治语境',
-        source: 'Kommersant',
-        region: '俄罗斯',
-        country: '俄罗斯',
-        time: '近一周',
-        topics: ['俄罗斯', '商业', '地缘政治'],
-        url: 'https://www.kommersant.ru/search/results?search_query=Trump',
-        summary: '辅助识别俄罗斯国内政治和商业语境中关于特朗普的报道重点。',
-      },
-      {
-        title: '日本公共媒体观察',
-        source: 'NHK',
-        region: '亚洲',
-        country: '日本',
-        time: '近一周',
-        topics: ['日本', '同盟', '安全'],
-        url: 'https://www3.nhk.or.jp/nhkworld/en/news/tags/80/',
-        summary: '研究日本媒体如何报道特朗普对同盟、安全、贸易和区域秩序的影响。',
-      },
-      {
-        title: '韩国通讯社报道',
-        source: 'Yonhap',
-        region: '亚洲',
-        country: '韩国',
-        time: '近一周',
-        topics: ['韩国', '半岛安全', '同盟'],
-        url: 'https://en.yna.co.kr/search/index?query=Trump',
-        summary: '用于跟踪韩国媒体关于特朗普、半岛安全、韩美关系的报道。',
-      },
-      {
-        title: '拉美西语世界报道',
-        source: 'El Pais',
-        region: '拉美',
-        country: '西语地区',
-        time: '近一周',
-        topics: ['拉美', '移民', '外交'],
-        url: 'https://english.elpais.com/search/trump/',
-        summary: '观察拉美和西语世界对特朗普移民、贸易和外交政策的报道。',
-      },
-      {
-        title: '巴西主流媒体观察',
-        source: 'Folha de S.Paulo',
-        region: '拉美',
-        country: '巴西',
-        time: '更长时间',
-        topics: ['巴西', '贸易', '政治'],
-        url: 'https://www1.folha.uol.com.br/search/?q=Trump',
-        summary: '用于分析巴西媒体对特朗普经贸、外交和政治影响的报道。',
-      },
-      {
-        title: '中东地区报道',
-        source: 'Al Jazeera',
-        region: '中东',
-        country: '卡塔尔',
-        time: '近一周',
-        topics: ['中东', '冲突', '外交'],
-        url: 'https://www.aljazeera.com/tag/donald-trump/',
-        summary: '关注中东媒体如何报道特朗普在地区冲突、外交和美国政策中的角色。',
-      },
-      {
-        title: '总统讲话与历史档案',
-        source: 'American Presidency Project',
-        region: '美国',
-        country: '美国',
-        time: '更长时间',
-        topics: ['历史档案', '讲话', '涉华表态'],
-        url: 'https://www.presidency.ucsb.edu/advanced-search',
-        summary: '用于查找特朗普历史讲话、正式文本和政策表述，适合做长期口径对比。',
-      },
-    ];
+    function loadJSON(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value ?? fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveJSON(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
 
     function escapeHTML(value) {
-      return value.replace(/[&<>"']/g, (char) => ({
+      return String(value).replace(/[&<>"']/g, (char) => ({
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
@@ -1182,225 +415,236 @@
       }[char]));
     }
 
-    function uniqueValues(key) {
-      return [...new Set(researchItems.map((item) => item[key]))].sort();
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.display = 'block';
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 2200);
     }
 
-    function uniqueTopics() {
-      return [...new Set(researchItems.flatMap((item) => item.topics))].sort();
-    }
-
-    function populateSelect(select, values) {
-      values.forEach((value) => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        select.appendChild(option);
-      });
-    }
-
-    function matchesFilters(item) {
-      const query = sourceSearch.value.trim().toLowerCase();
-      const fields = [
-        item.title,
-        item.source,
-        item.region,
-        item.country,
-        item.time,
-        item.summary,
-        item.topics.join(' '),
-      ].join(' ').toLowerCase();
-
-      return (!query || fields.includes(query))
-        && (regionFilter.value === 'all' || item.region === regionFilter.value)
-        && (timeFilter.value === 'all' || item.time === timeFilter.value)
-        && (topicFilter.value === 'all' || item.topics.includes(topicFilter.value));
-    }
-
-    function currentMatches() {
-      return researchItems.filter(matchesFilters);
-    }
-
-    function renderSources() {
-      const matches = currentMatches();
-      matchCount.textContent = `匹配 ${matches.length} / ${researchItems.length} 个信源`;
-      activeFilters.textContent = [
-        regionFilter.value !== 'all' ? `地区：${regionFilter.value}` : '',
-        timeFilter.value !== 'all' ? `时间：${timeFilter.value}` : '',
-        topicFilter.value !== 'all' ? `主题：${topicFilter.value}` : '',
-        sourceSearch.value.trim() ? `关键词：${sourceSearch.value.trim()}` : '',
-      ].filter(Boolean).join(' · ');
-
-      sourceResults.innerHTML = matches.map((item) => `
-        <a class="result-card" href="${item.url}" target="_blank" rel="noreferrer">
-          <div class="meta-line"><span>${escapeHTML(item.region)}</span><span>${escapeHTML(item.country)}</span><span>${escapeHTML(item.time)}</span></div>
-          <h4>${escapeHTML(item.source)}｜${escapeHTML(item.title)}</h4>
-          <p>${escapeHTML(item.summary)}</p>
-          <div class="result-tags">${item.topics.map((topic) => `<span>${escapeHTML(topic)}</span>`).join('')}</div>
-        </a>
-      `).join('') || '<div class="result-card"><h4>没有匹配信源</h4><p>请减少筛选条件，或换一个关键词。</p></div>';
-    }
-
-    function liveQueryText() {
-      return questionInput.value.trim()
-        || sourceSearch.value.trim()
-        || 'Donald Trump China poll global media';
-    }
-
-    async function refreshLiveNews() {
-      const query = liveQueryText();
-      liveStatus.textContent = `实时新闻检索中：${query}`;
-      liveNewsResults.innerHTML = '<div class="result-card"><h4>正在抓取实时新闻...</h4><p>从后端新闻检索 API 获取公开网络结果。</p></div>';
-      try {
-        const response = await fetch(`/api/research/news?q=${encodeURIComponent(query)}&limit=9`);
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || '实时新闻检索失败');
-        liveStatus.textContent = `实时新闻：${data.count} 条 · ${new Date(data.updatedAt).toLocaleString()}`;
-        liveNewsResults.innerHTML = data.results.map((item) => `
-          <a class="result-card" href="${item.url}" target="_blank" rel="noreferrer">
-            <div class="meta-line"><span>实时新闻</span><span>${escapeHTML(item.source)}</span><span>${item.publishedAt ? new Date(item.publishedAt).toLocaleString() : '时间待核验'}</span></div>
-            <h4>${escapeHTML(item.title)}</h4>
-            <p>点击打开原网页或 Google News 聚合页，继续核验原始报道。</p>
-          </a>
-        `).join('') || '<div class="result-card"><h4>没有实时结果</h4><p>请尝试更短关键词，例如 Donald Trump China。</p></div>';
-      } catch (error) {
-        liveStatus.textContent = '实时新闻暂不可用';
-        liveNewsResults.innerHTML = `<div class="result-card"><h4>实时新闻检索失败</h4><p>${escapeHTML(error.message)}。静态信源检索仍可继续使用。</p></div>`;
-      }
-    }
-
-    function loadHistory() {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || 'null');
-      return Array.isArray(stored) && stored.length ? stored : defaultHistory;
-    }
-
-    function saveHistory(items) {
-      localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(items.slice(0, 30)));
-    }
-
-    function renderHistory() {
-      const history = loadHistory();
-      historyList.innerHTML = history.map((question, index) => `
-        <li class="${index >= 10 ? 'history-hidden' : ''}"><time>${index === 0 ? '最新' : index < 3 ? '近期' : '更早'}</time>${escapeHTML(question)}</li>
+    function renderGroupChoices() {
+      groupGrid.innerHTML = GROUPS.map((group) => `
+        <label class="choice">
+          <input type="radio" name="group" value="${group}">
+          <strong>${group}</strong>
+          <span>查看本组通知</span>
+        </label>
       `).join('');
     }
 
-    function addHistory(question) {
-      const history = loadHistory().filter((item) => item !== question);
-      history.unshift(question);
-      saveHistory(history);
-      renderHistory();
+    function selectedRoles() {
+      return [...roleGrid.querySelectorAll('input:checked')].map((input) => input.value);
     }
 
-    function ask(question) {
-      const text = question.trim();
-      if (!text) return;
-
-      questionInput.value = text;
-      sourceSearch.value = text;
-      regionFilter.value = 'all';
-      timeFilter.value = 'all';
-      topicFilter.value = 'all';
-      renderSources();
-
-      const matches = currentMatches().slice(0, 5);
-      const sourceList = matches.map((item) => `<li><a class="source-link" href="${item.url}" target="_blank" rel="noreferrer">${escapeHTML(item.source)}</a>：${escapeHTML(item.summary)}</li>`).join('');
-      answerPanel.innerHTML = `
-        <strong>问题：</strong>${escapeHTML(text)}<br>
-        <strong>检索摘要：</strong>在当前信源目录中匹配到 ${currentMatches().length} 条相关线索。建议优先核对官方文本、通讯社报道和地区主流媒体三类信源。
-        <ul style="margin: 8px 0 0 18px;">${sourceList || '<li>暂无直接匹配，请尝试更短关键词，例如 China、poll、Europe、tariff。</li>'}</ul>
-      `;
-      answerPanel.classList.add('show');
-      addHistory(text);
-      refreshLiveNews();
+    function selectedGroup() {
+      return groupGrid.querySelector('input:checked')?.value || '';
     }
 
-    collapseSidebar.addEventListener('click', () => {
-      if (window.matchMedia('(max-width: 1100px)').matches) {
-        shell.classList.toggle('sidebar-open');
-      } else {
-        shell.classList.toggle('collapsed');
+    function applyProfileToForm() {
+      roleGrid.querySelectorAll('input').forEach((input) => {
+        input.checked = profile?.roles?.includes(input.value) || false;
+      });
+      groupGrid.querySelectorAll('input').forEach((input) => {
+        input.checked = input.value === profile?.group;
+      });
+      renderProfile();
+    }
+
+    function renderProfile() {
+      if (!profile) {
+        profileSummary.style.display = 'none';
+        composerPanel.style.display = 'none';
+        noticeScope.textContent = '请先选择身份和小组。';
+        return;
       }
-    });
 
-    mobileMenu.addEventListener('click', () => {
-      shell.classList.add('sidebar-open');
-    });
+      profileSummary.style.display = 'block';
+      profileSummary.textContent = `当前身份：${profile.roles.join('、')}；所在小组：${profile.group}`;
+      noticeScope.textContent = `显示支部通知，以及 ${profile.group} 的小组通知。`;
+      composerPanel.style.display = profile.roles.some((role) => role.includes('管理员')) ? 'block' : 'none';
+      renderNoticeTypeOptions();
+    }
 
-    document.querySelectorAll('.tag-button').forEach((button) => {
-      button.addEventListener('click', () => {
-        ask(button.dataset.question);
-        shell.classList.remove('sidebar-open');
+    function renderNoticeTypeOptions() {
+      const options = [];
+      if (profile?.roles.includes('支部通知管理员')) {
+        options.push('<option value="branch">支部通知（所有人可见）</option>');
+      }
+      if (profile?.roles.includes('小组通知管理员')) {
+        options.push(`<option value="group">小组通知（仅${profile.group}可见）</option>`);
+      }
+      noticeType.innerHTML = options.join('');
+    }
+
+    async function fetchNotices() {
+      if (!profile) {
+        notices = [];
+        renderNotices();
+        updateBadge();
+        return;
+      }
+      const response = await fetch(`/api/notifications?group=${encodeURIComponent(profile.group)}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || '获取通知失败');
+      notices = data.notifications;
+      renderNotices();
+      updateBadge();
+    }
+
+    function filteredNotices() {
+      return notices.filter((notice) => activeFilter === 'all' || notice.type === activeFilter);
+    }
+
+    function formatTime(value) {
+      return new Date(value).toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
       });
+    }
+
+    function renderNotices() {
+      const items = filteredNotices();
+      if (!profile) {
+        noticeList.innerHTML = '<div class="empty">请先选择身份和所在小组。</div>';
+        return;
+      }
+      if (!items.length) {
+        noticeList.innerHTML = '<div class="empty">当前没有可见通知。</div>';
+        return;
+      }
+
+      noticeList.innerHTML = items.map((notice) => {
+        const isUnread = !readIds.has(notice.id);
+        const typeLabel = notice.type === 'branch' ? '支部通知' : `${notice.group}通知`;
+        return `
+          <article class="notice ${isUnread ? 'unread' : ''}" data-id="${notice.id}">
+            <h3>${escapeHTML(notice.title)}</h3>
+            <p>${escapeHTML(notice.content)}</p>
+            <div class="notice-meta">
+              <span class="tag ${notice.type}">${typeLabel}</span>
+              ${notice.pinned ? '<span class="tag pin">置顶</span>' : ''}
+              <span>${escapeHTML(notice.authorRole)}</span>
+              <span>${formatTime(notice.createdAt)}</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function unreadCount() {
+      return notices.filter((notice) => !readIds.has(notice.id)).length;
+    }
+
+    async function updateBadge() {
+      const count = unreadCount();
+      unreadBadge.textContent = count > 99 ? '99+' : String(count);
+      document.title = count ? `(${count}) 支部通知` : '支部通知';
+      updateFavicon(count);
+      try {
+        if ('setAppBadge' in navigator && count > 0) await navigator.setAppBadge(count);
+        if ('clearAppBadge' in navigator && count === 0) await navigator.clearAppBadge();
+      } catch {
+        // Some browsers require installed PWA context; title and favicon remain as fallback.
+      }
+    }
+
+    function updateFavicon(count) {
+      const label = count > 0 ? (count > 9 ? '9+' : String(count)) : '';
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+          <rect width="96" height="96" rx="22" fill="#b91c1c"/>
+          <text x="48" y="60" text-anchor="middle" font-size="42" fill="white" font-family="Arial" font-weight="700">通</text>
+          ${label ? `<circle cx="74" cy="22" r="19" fill="#ef4444"/><text x="74" y="29" text-anchor="middle" font-size="20" fill="white" font-family="Arial" font-weight="700">${label}</text>` : ''}
+        </svg>
+      `;
+      const href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      document.querySelector('link[rel="icon"]').setAttribute('href', href);
+    }
+
+    saveProfile.addEventListener('click', async () => {
+      const roles = selectedRoles();
+      const group = selectedGroup();
+      if (!roles.length) return showToast('请至少选择一个身份');
+      if (!group) return showToast('请选择所在小组');
+      profile = { roles, group };
+      saveJSON(STORAGE.profile, profile);
+      renderProfile();
+      await fetchNotices();
+      showToast('已进入通知页');
     });
 
-    askForm.addEventListener('submit', (event) => {
+    resetProfile.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE.profile);
+      profile = null;
+      applyProfileToForm();
+      fetchNotices();
+    });
+
+    noticeForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      ask(questionInput.value);
-    });
-
-    moreHistory.addEventListener('click', () => {
-      const hidden = historyList.querySelectorAll('.history-hidden');
-      const shouldShow = hidden.length > 0;
-      document.querySelectorAll('#historyList li').forEach((item, index) => {
-        if (index >= 10) item.classList.toggle('history-hidden', !shouldShow);
+      const type = noticeType.value;
+      const authorRole = type === 'branch' ? '支部通知管理员' : '小组通知管理员';
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          title: noticeTitle.value,
+          content: noticeContent.value,
+          group: profile.group,
+          authorRole,
+          pinned: noticePinned.checked,
+        }),
       });
-      moreHistory.textContent = shouldShow ? '收起' : '更多';
+      const data = await response.json();
+      if (!response.ok) return showToast(data.error || '发布失败');
+      noticeForm.reset();
+      await fetchNotices();
+      showToast('通知已发布');
     });
 
-    [sourceSearch, regionFilter, timeFilter, topicFilter].forEach((control) => {
-      control.addEventListener('input', renderSources);
-      control.addEventListener('change', renderSources);
+    filterGrid.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      activeFilter = button.dataset.filter;
+      filterGrid.querySelectorAll('.chip').forEach((chip) => chip.classList.toggle('active', chip === button));
+      renderNotices();
     });
 
-    historyList.addEventListener('click', (event) => {
-      const item = event.target.closest('li');
-      if (item) ask(item.textContent.replace(/^(最新|近期|更早)/, '').trim());
+    refreshNotices.addEventListener('click', async () => {
+      await fetchNotices();
+      showToast('已刷新');
     });
 
-    clearHistory.addEventListener('click', () => {
-      localStorage.removeItem(STORAGE_KEYS.history);
-      renderHistory();
+    markAllRead.addEventListener('click', () => {
+      notices.forEach((notice) => readIds.add(notice.id));
+      saveJSON(STORAGE.readIds, [...readIds]);
+      renderNotices();
+      updateBadge();
+      showToast('已标记为全部已读');
     });
 
-    refreshLive.addEventListener('click', refreshLiveNews);
-
-    researchNotes.value = localStorage.getItem(STORAGE_KEYS.notes) || '';
-    researchNotes.addEventListener('input', () => {
-      localStorage.setItem(STORAGE_KEYS.notes, researchNotes.value);
+    noticeList.addEventListener('click', (event) => {
+      const card = event.target.closest('.notice');
+      if (!card) return;
+      readIds.add(card.dataset.id);
+      saveJSON(STORAGE.readIds, [...readIds]);
+      renderNotices();
+      updateBadge();
     });
 
-    exportReport.addEventListener('click', () => {
-      const matches = currentMatches();
-      const report = [
-        'TT 特朗普专题研究摘要',
-        `导出时间：${new Date().toLocaleString()}`,
-        `当前问题：${questionInput.value || '未输入'}`,
-        `匹配信源：${matches.length}`,
-        `实时新闻状态：${liveStatus.textContent}`,
-        '',
-        '【匹配信源】',
-        ...matches.map((item, index) => `${index + 1}. ${item.source}｜${item.title}｜${item.region}/${item.country}｜${item.time}\n   ${item.summary}\n   ${item.url}`),
-        '',
-        '【问答历史】',
-        ...loadHistory().slice(0, 10).map((item, index) => `${index + 1}. ${item}`),
-        '',
-        '【研究笔记】',
-        researchNotes.value || '无',
-      ].join('\n');
-      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `tt-research-${Date.now()}.txt`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js');
+    }
 
-    populateSelect(regionFilter, uniqueValues('region'));
-    populateSelect(timeFilter, uniqueValues('time'));
-    populateSelect(topicFilter, uniqueTopics());
-    renderHistory();
-    renderSources();
+    renderGroupChoices();
+    applyProfileToForm();
+    fetchNotices().catch((error) => showToast(error.message));
+    setInterval(() => fetchNotices().catch(() => {}), 30000);
   </script>
 </body>
 </html>
