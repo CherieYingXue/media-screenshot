@@ -41,3 +41,4 @@ python server.py
 - `GET /api/bootstrap`：身份、小组和通知类型配置
 - `GET /api/notifications?group=第一小组`：获取支部通知和指定小组通知
 - `POST /api/notifications`：发布通知
+- `DELETE /api/notifications/<id>`：删除有管理权限的通知

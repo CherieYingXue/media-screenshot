@@ -84,6 +84,30 @@ def append_notification(notification):
         tmp_file.replace(DATA_FILE)
 
 
+def remove_notification(notice_id, actor_role, actor_group):
+    ensure_data_file()
+    with DATA_LOCK:
+        notifications = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        target = next((item for item in notifications if item["id"] == notice_id), None)
+        if not target:
+            return None, "通知不存在", 404
+
+        if target["type"] == "branch":
+            if actor_role != "支部通知管理员":
+                return None, "只有支部通知管理员可以删除支部通知", 403
+        elif actor_role != "小组通知管理员" or target.get("group") != actor_group:
+            return None, "只有本小组通知管理员可以删除本小组通知", 403
+
+        remaining = [item for item in notifications if item["id"] != notice_id]
+        tmp_file = DATA_FILE.with_suffix(".json.tmp")
+        tmp_file.write_text(
+            json.dumps(remaining, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        tmp_file.replace(DATA_FILE)
+        return target, None, None
+
+
 def visible_to_group(notification, group):
     if notification["type"] == "branch":
         return True
@@ -158,6 +182,17 @@ def create_notification():
 
     append_notification(notification)
     return jsonify({"notification": notification}), 201
+
+
+@app.route("/api/notifications/<notice_id>", methods=["DELETE"])
+def delete_notification(notice_id):
+    payload = request.get_json(silent=True) or {}
+    actor_role = payload.get("authorRole")
+    actor_group = payload.get("group")
+    deleted, error, status = remove_notification(notice_id, actor_role, actor_group)
+    if error:
+        return jsonify({"error": error}), status
+    return jsonify({"deleted": deleted})
 
 
 if __name__ == "__main__":

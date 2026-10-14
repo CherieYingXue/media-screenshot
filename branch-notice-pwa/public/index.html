@@ -209,6 +209,24 @@
       line-height: 1.35;
     }
 
+    .notice-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .delete-button {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid #fecaca;
+      border-radius: 999px;
+      color: #b91c1c;
+      background: #fff1f2;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
     .notice p {
       margin-top: 10px;
       color: #374151;
@@ -520,9 +538,13 @@
       noticeList.innerHTML = items.map((notice) => {
         const isUnread = !readIds.has(notice.id);
         const typeLabel = notice.type === 'branch' ? '支部通知' : `${notice.group}通知`;
+        const canDelete = canDeleteNotice(notice);
         return `
           <article class="notice ${isUnread ? 'unread' : ''}" data-id="${notice.id}">
-            <h3>${escapeHTML(notice.title)}</h3>
+            <div class="notice-head">
+              <h3>${escapeHTML(notice.title)}</h3>
+              ${canDelete ? `<button class="delete-button" type="button" data-delete-id="${notice.id}">删除</button>` : ''}
+            </div>
             <p>${escapeHTML(notice.content)}</p>
             <div class="notice-meta">
               <span class="tag ${notice.type}">${typeLabel}</span>
@@ -533,6 +555,12 @@
           </article>
         `;
       }).join('');
+    }
+
+    function canDeleteNotice(notice) {
+      if (!profile) return false;
+      if (notice.type === 'branch') return profile.roles.includes('支部通知管理员');
+      return profile.roles.includes('小组通知管理员') && notice.group === profile.group;
     }
 
     function unreadCount() {
@@ -629,6 +657,12 @@
     });
 
     noticeList.addEventListener('click', (event) => {
+      const deleteButton = event.target.closest('[data-delete-id]');
+      if (deleteButton) {
+        deleteNotice(deleteButton.dataset.deleteId);
+        return;
+      }
+
       const card = event.target.closest('.notice');
       if (!card) return;
       readIds.add(card.dataset.id);
@@ -636,6 +670,25 @@
       renderNotices();
       updateBadge();
     });
+
+    async function deleteNotice(noticeId) {
+      const notice = notices.find((item) => item.id === noticeId);
+      if (!notice || !canDeleteNotice(notice)) return showToast('没有删除权限');
+      if (!window.confirm(`确定删除“${notice.title}”吗？`)) return;
+
+      const authorRole = notice.type === 'branch' ? '支部通知管理员' : '小组通知管理员';
+      const response = await fetch(`/api/notifications/${encodeURIComponent(noticeId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authorRole, group: profile.group }),
+      });
+      const data = await response.json();
+      if (!response.ok) return showToast(data.error || '删除失败');
+      readIds.delete(noticeId);
+      saveJSON(STORAGE.readIds, [...readIds]);
+      await fetchNotices();
+      showToast('通知已删除');
+    }
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js');
