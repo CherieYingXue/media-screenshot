@@ -1,0 +1,19 @@
+{
+  "name": "支部通知",
+  "short_name": "支部通知",
+  "description": "手机端支部与小组通知网页",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#b91c1c",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

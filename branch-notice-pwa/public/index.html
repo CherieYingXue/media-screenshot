@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#b91c1c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="支部通知">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>支部通知</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #fff7ed;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #f3d6bf;
+      --red: #b91c1c;
+      --red-2: #ef4444;
+      --gold: #f59e0b;
+      --shadow: 0 18px 50px rgba(127, 29, 29, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(239, 68, 68, 0.16), transparent 34%),
+        linear-gradient(180deg, #fff7ed 0%, #fff 48%, #fff7ed 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { width: min(100%, 780px); margin: 0 auto; padding: 16px 14px 92px; }
+
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      margin: 0 -14px 14px;
+      padding: calc(10px + env(safe-area-inset-top)) 14px 14px;
+      background: rgba(255, 247, 237, 0.9);
+      border-bottom: 1px solid rgba(185, 28, 28, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand-row, .section-title, .notice-meta, .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-row { justify-content: space-between; }
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      box-shadow: 0 12px 28px rgba(185, 28, 28, 0.3);
+      font-weight: 900;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 1.22rem; }
+    .subtitle { margin-top: 3px; color: var(--muted); font-size: 0.84rem; }
+
+    .badge {
+      min-width: 30px;
+      height: 30px;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--red-2);
+      display: inline-grid;
+      place-items: center;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(239, 68, 68, 0.3);
+    }
+
+    .panel, .notice {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .panel { margin-bottom: 14px; }
+    .section-title { justify-content: space-between; margin-bottom: 12px; }
+    .section-title h2 { font-size: 1.06rem; }
+    .hint { color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
+
+    .choice-grid, .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .choice {
+      position: relative;
+      display: grid;
+      gap: 4px;
+      min-height: 58px;
+      padding: 12px;
+      border: 1px solid #fed7aa;
+      border-radius: 18px;
+      background: #fffaf5;
+    }
+
+    .choice input { position: absolute; inset: 0; opacity: 0; }
+    .choice strong { font-size: 0.95rem; }
+    .choice span { color: var(--muted); font-size: 0.78rem; }
+    .choice:has(input:checked), .chip.active {
+      border-color: rgba(185, 28, 28, 0.58);
+      background: #fff1f2;
+      box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.18);
+    }
+
+    .button {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 17px;
+      color: #fff;
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      font-weight: 850;
+      box-shadow: 0 14px 30px rgba(185, 28, 28, 0.25);
+    }
+
+    .button.secondary {
+      color: var(--red);
+      background: #fff7ed;
+      border: 1px solid #fecaca;
+      box-shadow: none;
+    }
+
+    .button.ghost {
+      color: var(--text);
+      background: #fff;
+      border: 1px solid #fed7aa;
+      box-shadow: none;
+    }
+
+    .profile-summary {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 18px;
+      background: #fff7ed;
+      color: #7f1d1d;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .composer { display: none; }
+    .form { display: grid; gap: 10px; }
+    .field {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px;
+      border: 1px solid #fed7aa;
+      border-radius: 16px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea.field { min-height: 108px; resize: vertical; line-height: 1.55; }
+
+    .chip {
+      border: 1px solid #fed7aa;
+      border-radius: 999px;
+      padding: 8px 10px;
+      background: #fff;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .notice-list { display: grid; gap: 12px; }
+    .notice { position: relative; overflow: hidden; }
+    .notice.unread::before {
+      content: "";
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red-2);
+      box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.12);
+    }
+
+    .notice-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .notice h3 {
+      padding-right: 20px;
+      font-size: 1.05rem;
+      line-height: 1.35;
+    }
+
+    .delete-button {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid #fecaca;
+      border-radius: 999px;
+      color: #b91c1c;
+      background: #fff1f2;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .notice p {
+      margin-top: 10px;
+      color: #374151;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .notice-meta {
+      flex-wrap: wrap;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .tag {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-weight: 700;
+    }
+
+    .tag.scope { color: #991b1b; background: #fee2e2; }
+    .tag.pin { color: #92400e; background: #fef3c7; }
+
+    .ack-area {
+      display: grid;
+      gap: 9px;
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px dashed #fed7aa;
+    }
+
+    .ack-button {
+      width: fit-content;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      font-weight: 850;
+    }
+
+    .ack-button.done {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .ack-list {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .ack-list strong { color: var(--text); }
+
+    .empty {
+      padding: 24px 14px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed #fdba74;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .toast {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      z-index: 10;
+      display: none;
+      padding: 13px 14px;
+      border-radius: 18px;
+      color: #fff;
+      background: rgba(31, 41, 55, 0.94);
+      text-align: center;
+    }
+
+    .install-tip {
+      margin-top: 10px;
+      color: #92400e;
+      font-size: 0.8rem;
+      line-height: 1.55;
+    }
+
+    @media (min-width: 640px) {
+      .choice-grid, .filter-grid { grid-template-columns: repeat(3, 1fr); }
+      .actions { justify-content: flex-end; }
+      .actions .button { width: auto; padding: 0 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand-row">
+        <div class="brand-row">
+          <div class="logo">通</div>
+          <div>
+            <h1>支部通知</h1>
+            <p class="subtitle">身份查看 · 范围发布 · 新通知角标</p>
+          </div>
+        </div>
+        <div class="badge" id="unreadBadge" aria-label="未读通知数量">0</div>
+      </div>
+    </header>
+
+    <section class="panel" aria-labelledby="loginTitle">
+      <div class="section-title">
+        <div>
+          <h2 id="loginTitle">选择身份</h2>
+          <p class="hint">请先填写学号+姓名，再选择一个或多个身份。支部书记、支委、组长可以发布和删除通知。</p>
+        </div>
+      </div>
+      <input class="field" id="studentName" maxlength="80" placeholder="学号+姓名，例如：20260001 张三" autocomplete="name">
+      <div class="choice-grid" id="roleGrid"></div>
+      <div class="actions" style="margin-top: 12px;">
+        <button class="button" id="saveProfile" type="button">进入通知页</button>
+        <button class="button secondary" id="resetProfile" type="button">重新选择</button>
+      </div>
+      <div class="profile-summary" id="profileSummary"></div>
+      <p class="install-tip">添加到主屏幕：手机浏览器打开本页后，使用浏览器菜单中的“添加到主屏幕”。应用会尝试用浏览器 Badging API 在图标上显示未读数量；不支持时会用页面标题和站点图标提示。</p>
+    </section>
+
+    <section class="panel composer" id="composerPanel" aria-labelledby="composerTitle">
+      <div class="section-title">
+        <div>
+          <h2 id="composerTitle">发布通知</h2>
+          <p class="hint">发布者可选择通知范围：全体、支委、组长或各组成员。</p>
+        </div>
+      </div>
+      <form class="form" id="noticeForm">
+        <select class="field" id="noticeScope" aria-label="通知范围"></select>
+        <input class="field" id="noticeTitle" maxlength="80" placeholder="通知标题" required>
+        <textarea class="field" id="noticeContent" maxlength="2000" placeholder="通知内容" required></textarea>
+        <label class="choice">
+          <input type="checkbox" id="noticePinned">
+          <strong>标记重要</strong>
+          <span>仍按最新通知优先显示</span>
+        </label>
+        <button class="button" type="submit">发布</button>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="noticeTitleBlock">
+      <div class="section-title">
+        <div>
+          <h2 id="noticeTitleBlock">通知列表</h2>
+          <p class="hint" id="noticeScopeText">请先选择身份。</p>
+        </div>
+      </div>
+      <div class="filter-grid" id="filterGrid"></div>
+      <div class="actions" style="margin: 12px 0;">
+        <button class="button ghost" id="refreshNotices" type="button">刷新</button>
+        <button class="button secondary" id="markAllRead" type="button">全部已读</button>
+      </div>
+      <div class="notice-list" id="noticeList"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE = {
+      profile: 'notice-profile-v2',
+      readIds: 'notice-read-ids-v2',
+    };
+    const PUBLISHER_ROLES = ['支部书记', '支委', '组长'];
+    const roleDescriptions = {
+      '支部书记': '查看全部，可发布和删除',
+      '支委': '查看支委通知，可发布和删除',
+      '组长': '查看组长通知，可发布和删除',
+      '第一组成员': '查看第一组成员通知',
+      '第二组成员': '查看第二组成员通知',
+      '第三组成员': '查看第三组成员通知',
+    };
+
+    const studentName = document.getElementById('studentName');
+    const roleGrid = document.getElementById('roleGrid');
+    const saveProfile = document.getElementById('saveProfile');
+    const resetProfile = document.getElementById('resetProfile');
+    const profileSummary = document.getElementById('profileSummary');
+    const composerPanel = document.getElementById('composerPanel');
+    const noticeForm = document.getElementById('noticeForm');
+    const noticeScope = document.getElementById('noticeScope');
+    const noticeTitle = document.getElementById('noticeTitle');
+    const noticeContent = document.getElementById('noticeContent');
+    const noticePinned = document.getElementById('noticePinned');
+    const noticeList = document.getElementById('noticeList');
+    const noticeScopeText = document.getElementById('noticeScopeText');
+    const unreadBadge = document.getElementById('unreadBadge');
+    const refreshNotices = document.getElementById('refreshNotices');
+    const markAllRead = document.getElementById('markAllRead');
+    const filterGrid = document.getElementById('filterGrid');
+    const toast = document.getElementById('toast');
+
+    let bootstrap = { roles: [], scopes: [] };
+    let profile = loadJSON(STORAGE.profile, null);
+    let readIds = new Set(loadJSON(STORAGE.readIds, []));
+    let notices = [];
+    let activeFilter = 'all';
+
+    function loadJSON(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value ?? fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveJSON(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[char]));
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.display = 'block';
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 2200);
+    }
+
+    function hasPublisherRole() {
+      return profile?.roles?.some((role) => PUBLISHER_ROLES.includes(role)) || false;
+    }
+
+    async function loadBootstrap() {
+      const response = await fetch('/api/bootstrap');
+      bootstrap = await response.json();
+      renderRoleChoices();
+      renderScopeOptions();
+      renderFilters();
+      applyProfileToForm();
+    }
+
+    function renderRoleChoices() {
+      roleGrid.innerHTML = bootstrap.roles.map((role) => `
+        <label class="choice">
+          <input type="checkbox" value="${role}">
+          <strong>${role}</strong>
+          <span>${roleDescriptions[role] || '查看对应通知'}</span>
+        </label>
+      `).join('');
+    }
+
+    function renderScopeOptions() {
+      noticeScope.innerHTML = bootstrap.scopes.map((scope) => (
+        `<option value="${scope.id}">${scope.label}</option>`
+      )).join('');
+    }
+
+    function renderFilters() {
+      filterGrid.innerHTML = [
+        '<button class="chip active" type="button" data-filter="all">全部</button>',
+        ...bootstrap.scopes.map((scope) => `<button class="chip" type="button" data-filter="${scope.id}">${scope.label}</button>`),
+      ].join('');
+    }
+
+    function selectedRoles() {
+      return [...roleGrid.querySelectorAll('input:checked')].map((input) => input.value);
+    }
+
+    function applyProfileToForm() {
+      studentName.value = profile?.studentName || '';
+      roleGrid.querySelectorAll('input').forEach((input) => {
+        input.checked = profile?.roles?.includes(input.value) || false;
+      });
+      renderProfile();
+    }
+
+    function renderProfile() {
+      if (!profile) {
+        profileSummary.style.display = 'none';
+        composerPanel.style.display = 'none';
+        noticeScopeText.textContent = '请先选择身份。';
+        return;
+      }
+
+      profileSummary.style.display = 'block';
+      profileSummary.textContent = `当前人员：${profile.studentName}；当前身份：${profile.roles.join('、')}`;
+      noticeScopeText.textContent = `显示与你身份匹配的通知；支部书记可查看全部通知。`;
+      composerPanel.style.display = hasPublisherRole() ? 'block' : 'none';
+    }
+
+    async function fetchNotices() {
+      if (!profile) {
+        notices = [];
+        renderNotices();
+        updateBadge();
+        return;
+      }
+      const params = new URLSearchParams();
+      profile.roles.forEach((role) => params.append('roles', role));
+      const response = await fetch(`/api/notifications?${params.toString()}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || '获取通知失败');
+      notices = data.notifications;
+      renderNotices();
+      updateBadge();
+    }
+
+    function filteredNotices() {
+      return notices.filter((notice) => activeFilter === 'all' || notice.scope === activeFilter);
+    }
+
+    function formatTime(value) {
+      return new Date(value).toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    function renderNotices() {
+      const items = filteredNotices();
+      if (!profile) {
+        noticeList.innerHTML = '<div class="empty">请先选择身份。</div>';
+        return;
+      }
+      if (!items.length) {
+        noticeList.innerHTML = '<div class="empty">当前没有可见通知。</div>';
+        return;
+      }
+
+      noticeList.innerHTML = items.map((notice) => {
+        const isUnread = !readIds.has(notice.id);
+        const acknowledgements = notice.acknowledgements || [];
+        const acknowledged = hasAcknowledged(notice);
+        const ackNames = acknowledgements.map((item) => escapeHTML(item.studentName)).join('、');
+        return `
+          <article class="notice ${isUnread ? 'unread' : ''}" data-id="${notice.id}">
+            <div class="notice-head">
+              <h3>${escapeHTML(notice.title)}</h3>
+              ${hasPublisherRole() ? `<button class="delete-button" type="button" data-delete-id="${notice.id}">删除</button>` : ''}
+            </div>
+            <p>${escapeHTML(notice.content)}</p>
+            <div class="notice-meta">
+              <span class="tag scope">${escapeHTML(notice.scopeLabel || '全体')}</span>
+              ${notice.pinned ? '<span class="tag pin">重要</span>' : ''}
+              <span>${escapeHTML((notice.authorRoles || []).join('、') || notice.authorRole || '发布者')}</span>
+              <span>${formatTime(notice.createdAt)}</span>
+            </div>
+            <div class="ack-area">
+              <button class="ack-button ${acknowledged ? 'done' : ''}" type="button" data-ack-id="${notice.id}" ${acknowledged ? 'disabled' : ''}>${acknowledged ? '已知道' : '知道了'}</button>
+              <div class="ack-list"><strong>已知道：</strong>${ackNames || '暂无'}</div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function hasAcknowledged(notice) {
+      return (notice.acknowledgements || []).some((item) => item.studentName === profile?.studentName);
+    }
+
+    function unreadCount() {
+      return notices.filter((notice) => !readIds.has(notice.id)).length;
+    }
+
+    async function updateBadge() {
+      const count = unreadCount();
+      unreadBadge.textContent = count > 99 ? '99+' : String(count);
+      document.title = count ? `(${count}) 支部通知` : '支部通知';
+      updateFavicon(count);
+      try {
+        if ('setAppBadge' in navigator && count > 0) await navigator.setAppBadge(count);
+        if ('clearAppBadge' in navigator && count === 0) await navigator.clearAppBadge();
+      } catch {
+        // Some browsers require installed PWA context; title and favicon remain as fallback.
+      }
+    }
+
+    function updateFavicon(count) {
+      const label = count > 0 ? (count > 9 ? '9+' : String(count)) : '';
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+          <rect width="96" height="96" rx="22" fill="#b91c1c"/>
+          <text x="48" y="60" text-anchor="middle" font-size="42" fill="white" font-family="Arial" font-weight="700">通</text>
+          ${label ? `<circle cx="74" cy="22" r="19" fill="#ef4444"/><text x="74" y="29" text-anchor="middle" font-size="20" fill="white" font-family="Arial" font-weight="700">${label}</text>` : ''}
+        </svg>
+      `;
+      document.querySelector('link[rel="icon"]').setAttribute('href', `data:image/svg+xml,${encodeURIComponent(svg)}`);
+    }
+
+    saveProfile.addEventListener('click', async () => {
+      const name = studentName.value.trim();
+      const roles = selectedRoles();
+      if (!name) return showToast('请填写学号+姓名');
+      if (!roles.length) return showToast('请至少选择一个身份');
+      profile = { studentName: name, roles };
+      saveJSON(STORAGE.profile, profile);
+      renderProfile();
+      await fetchNotices();
+      showToast('已进入通知页');
+    });
+
+    resetProfile.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE.profile);
+      profile = null;
+      applyProfileToForm();
+      fetchNotices();
+    });
+
+    noticeForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scope: noticeScope.value,
+          title: noticeTitle.value,
+          content: noticeContent.value,
+          roles: profile.roles,
+          pinned: noticePinned.checked,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) return showToast(data.error || '发布失败');
+      noticeForm.reset();
+      await fetchNotices();
+      showToast('通知已发布');
+    });
+
+    filterGrid.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      activeFilter = button.dataset.filter;
+      filterGrid.querySelectorAll('.chip').forEach((chip) => chip.classList.toggle('active', chip === button));
+      renderNotices();
+    });
+
+    refreshNotices.addEventListener('click', async () => {
+      await fetchNotices();
+      showToast('已刷新');
+    });
+
+    markAllRead.addEventListener('click', () => {
+      notices.forEach((notice) => readIds.add(notice.id));
+      saveJSON(STORAGE.readIds, [...readIds]);
+      renderNotices();
+      updateBadge();
+      showToast('已标记为全部已读');
+    });
+
+    noticeList.addEventListener('click', (event) => {
+      const ackButton = event.target.closest('[data-ack-id]');
+      if (ackButton) {
+        acknowledgeNotice(ackButton.dataset.ackId);
+        return;
+      }
+
+      const deleteButton = event.target.closest('[data-delete-id]');
+      if (deleteButton) {
+        deleteNotice(deleteButton.dataset.deleteId);
+        return;
+      }
+
+      const card = event.target.closest('.notice');
+      if (!card) return;
+      readIds.add(card.dataset.id);
+      saveJSON(STORAGE.readIds, [...readIds]);
+      renderNotices();
+      updateBadge();
+    });
+
+    async function deleteNotice(noticeId) {
+      const notice = notices.find((item) => item.id === noticeId);
+      if (!notice || !hasPublisherRole()) return showToast('没有删除权限');
+      if (!window.confirm(`确定删除“${notice.title}”吗？`)) return;
+
+      const response = await fetch(`/api/notifications/${encodeURIComponent(noticeId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roles: profile.roles }),
+      });
+      const data = await response.json();
+      if (!response.ok) return showToast(data.error || '删除失败');
+      readIds.delete(noticeId);
+      saveJSON(STORAGE.readIds, [...readIds]);
+      await fetchNotices();
+      showToast('通知已删除');
+    }
+
+    async function acknowledgeNotice(noticeId) {
+      if (!profile?.studentName) return showToast('请先填写学号+姓名');
+      const notice = notices.find((item) => item.id === noticeId);
+      if (!notice || hasAcknowledged(notice)) return;
+
+      const response = await fetch(`/api/notifications/${encodeURIComponent(noticeId)}/ack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roles: profile.roles, studentName: profile.studentName }),
+      });
+      const data = await response.json();
+      if (!response.ok) return showToast(data.error || '确认失败');
+      await fetchNotices();
+      showToast('已记录：知道了');
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js');
+    }
+
+    loadBootstrap()
+      .then(fetchNotices)
+      .catch((error) => showToast(error.message));
+    setInterval(() => fetchNotices().catch(() => {}), 30000);
+  </script>
+</body>
+</html>

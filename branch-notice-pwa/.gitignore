@@ -1,0 +1,7 @@
+screenshots/
+ms-playwright/
+data/*.json
+__pycache__/
+*.pyc
+.env
+.venv/
