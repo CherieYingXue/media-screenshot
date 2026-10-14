@@ -20,7 +20,6 @@
       --red: #b91c1c;
       --red-2: #ef4444;
       --gold: #f59e0b;
-      --green: #16a34a;
       --shadow: 0 18px 50px rgba(127, 29, 29, 0.14);
     }
 
@@ -38,7 +37,7 @@
 
     button, input, textarea, select { font: inherit; }
     button { cursor: pointer; }
-    .app { width: min(100%, 760px); margin: 0 auto; padding: 16px 14px 92px; }
+    .app { width: min(100%, 780px); margin: 0 auto; padding: 16px 14px 92px; }
 
     .top {
       position: sticky;
@@ -51,7 +50,7 @@
       backdrop-filter: blur(18px);
     }
 
-    .brand-row, .section-title, .notice-meta, .chips, .actions {
+    .brand-row, .section-title, .notice-meta, .actions {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -100,14 +99,12 @@
     .section-title h2 { font-size: 1.06rem; }
     .hint { color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
 
-    .role-grid, .group-grid, .filter-grid {
+    .choice-grid, .filter-grid {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-top: 12px;
     }
-
-    .role-grid { grid-template-columns: 1fr; }
-    .group-grid, .filter-grid { grid-template-columns: repeat(3, 1fr); }
 
     .choice {
       position: relative;
@@ -180,13 +177,13 @@
 
     textarea.field { min-height: 108px; resize: vertical; line-height: 1.55; }
 
-    .chips { flex-wrap: wrap; }
     .chip {
       border: 1px solid #fed7aa;
       border-radius: 999px;
-      padding: 8px 12px;
+      padding: 8px 10px;
       background: #fff;
       color: var(--text);
+      white-space: nowrap;
     }
 
     .notice-list { display: grid; gap: 12px; }
@@ -203,17 +200,17 @@
       box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.12);
     }
 
-    .notice h3 {
-      padding-right: 22px;
-      font-size: 1.05rem;
-      line-height: 1.35;
-    }
-
     .notice-head {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
       align-items: start;
+    }
+
+    .notice h3 {
+      padding-right: 20px;
+      font-size: 1.05rem;
+      line-height: 1.35;
     }
 
     .delete-button {
@@ -249,8 +246,7 @@
       font-weight: 700;
     }
 
-    .tag.branch { color: #991b1b; background: #fee2e2; }
-    .tag.group { color: #166534; background: #dcfce7; }
+    .tag.scope { color: #991b1b; background: #fee2e2; }
     .tag.pin { color: #92400e; background: #fef3c7; }
 
     .empty {
@@ -284,7 +280,7 @@
     }
 
     @media (min-width: 640px) {
-      .role-grid { grid-template-columns: repeat(3, 1fr); }
+      .choice-grid, .filter-grid { grid-template-columns: repeat(3, 1fr); }
       .actions { justify-content: flex-end; }
       .actions .button { width: auto; padding: 0 18px; }
     }
@@ -298,7 +294,7 @@
           <div class="logo">通</div>
           <div>
             <h1>支部通知</h1>
-            <p class="subtitle">手机查看 · 主屏幕入口 · 新通知角标</p>
+            <p class="subtitle">身份查看 · 范围发布 · 新通知角标</p>
           </div>
         </div>
         <div class="badge" id="unreadBadge" aria-label="未读通知数量">0</div>
@@ -308,28 +304,11 @@
     <section class="panel" aria-labelledby="loginTitle">
       <div class="section-title">
         <div>
-          <h2 id="loginTitle">登录身份</h2>
-          <p class="hint">请选择一个或多个身份，并选择所在小组。</p>
+          <h2 id="loginTitle">选择身份</h2>
+          <p class="hint">请选择一个或多个身份。支部书记、支委、组长可以发布和删除通知。</p>
         </div>
       </div>
-      <div class="role-grid" id="roleGrid">
-        <label class="choice">
-          <input type="checkbox" value="支部通知管理员">
-          <strong>支部通知管理员</strong>
-          <span>可发布全体可见的支部通知</span>
-        </label>
-        <label class="choice">
-          <input type="checkbox" value="小组通知管理员">
-          <strong>小组通知管理员</strong>
-          <span>可发布本小组可见的小组通知</span>
-        </label>
-        <label class="choice">
-          <input type="checkbox" value="订阅者">
-          <strong>订阅者</strong>
-          <span>查看支部通知和本小组通知</span>
-        </label>
-      </div>
-      <div class="group-grid" id="groupGrid" aria-label="选择小组"></div>
+      <div class="choice-grid" id="roleGrid"></div>
       <div class="actions" style="margin-top: 12px;">
         <button class="button" id="saveProfile" type="button">进入通知页</button>
         <button class="button secondary" id="resetProfile" type="button">重新选择</button>
@@ -342,17 +321,17 @@
       <div class="section-title">
         <div>
           <h2 id="composerTitle">发布通知</h2>
-          <p class="hint">支部通知所有人可见；小组通知仅当前小组可见。</p>
+          <p class="hint">发布者可选择通知范围：全体、支委、组长或各组成员。</p>
         </div>
       </div>
       <form class="form" id="noticeForm">
-        <select class="field" id="noticeType" aria-label="通知类型"></select>
+        <select class="field" id="noticeScope" aria-label="通知范围"></select>
         <input class="field" id="noticeTitle" maxlength="80" placeholder="通知标题" required>
         <textarea class="field" id="noticeContent" maxlength="2000" placeholder="通知内容" required></textarea>
         <label class="choice">
           <input type="checkbox" id="noticePinned">
-          <strong>置顶通知</strong>
-          <span>重要事项优先显示</span>
+          <strong>标记重要</strong>
+          <span>仍按最新通知优先显示</span>
         </label>
         <button class="button" type="submit">发布</button>
       </form>
@@ -362,14 +341,10 @@
       <div class="section-title">
         <div>
           <h2 id="noticeTitleBlock">通知列表</h2>
-          <p class="hint" id="noticeScope">请先选择身份和小组。</p>
+          <p class="hint" id="noticeScopeText">请先选择身份。</p>
         </div>
       </div>
-      <div class="filter-grid" id="filterGrid">
-        <button class="chip active" type="button" data-filter="all">全部</button>
-        <button class="chip" type="button" data-filter="branch">支部通知</button>
-        <button class="chip" type="button" data-filter="group">小组通知</button>
-      </div>
+      <div class="filter-grid" id="filterGrid"></div>
       <div class="actions" style="margin: 12px 0;">
         <button class="button ghost" id="refreshNotices" type="button">刷新</button>
         <button class="button secondary" id="markAllRead" type="button">全部已读</button>
@@ -382,29 +357,38 @@
 
   <script>
     const STORAGE = {
-      profile: 'notice-profile-v1',
-      readIds: 'notice-read-ids-v1',
+      profile: 'notice-profile-v2',
+      readIds: 'notice-read-ids-v2',
     };
-    const GROUPS = ['第一小组', '第二小组', '第三小组'];
+    const PUBLISHER_ROLES = ['支部书记', '支委', '组长'];
+    const roleDescriptions = {
+      '支部书记': '查看全部，可发布和删除',
+      '支委': '查看支委通知，可发布和删除',
+      '组长': '查看组长通知，可发布和删除',
+      '第一组成员': '查看第一组成员通知',
+      '第二组成员': '查看第二组成员通知',
+      '第三组成员': '查看第三组成员通知',
+    };
+
     const roleGrid = document.getElementById('roleGrid');
-    const groupGrid = document.getElementById('groupGrid');
     const saveProfile = document.getElementById('saveProfile');
     const resetProfile = document.getElementById('resetProfile');
     const profileSummary = document.getElementById('profileSummary');
     const composerPanel = document.getElementById('composerPanel');
     const noticeForm = document.getElementById('noticeForm');
-    const noticeType = document.getElementById('noticeType');
+    const noticeScope = document.getElementById('noticeScope');
     const noticeTitle = document.getElementById('noticeTitle');
     const noticeContent = document.getElementById('noticeContent');
     const noticePinned = document.getElementById('noticePinned');
     const noticeList = document.getElementById('noticeList');
-    const noticeScope = document.getElementById('noticeScope');
+    const noticeScopeText = document.getElementById('noticeScopeText');
     const unreadBadge = document.getElementById('unreadBadge');
     const refreshNotices = document.getElementById('refreshNotices');
     const markAllRead = document.getElementById('markAllRead');
     const filterGrid = document.getElementById('filterGrid');
     const toast = document.getElementById('toast');
 
+    let bootstrap = { roles: [], scopes: [] };
     let profile = loadJSON(STORAGE.profile, null);
     let readIds = new Set(loadJSON(STORAGE.readIds, []));
     let notices = [];
@@ -442,30 +426,49 @@
       }, 2200);
     }
 
-    function renderGroupChoices() {
-      groupGrid.innerHTML = GROUPS.map((group) => `
+    function hasPublisherRole() {
+      return profile?.roles?.some((role) => PUBLISHER_ROLES.includes(role)) || false;
+    }
+
+    async function loadBootstrap() {
+      const response = await fetch('/api/bootstrap');
+      bootstrap = await response.json();
+      renderRoleChoices();
+      renderScopeOptions();
+      renderFilters();
+      applyProfileToForm();
+    }
+
+    function renderRoleChoices() {
+      roleGrid.innerHTML = bootstrap.roles.map((role) => `
         <label class="choice">
-          <input type="radio" name="group" value="${group}">
-          <strong>${group}</strong>
-          <span>查看本组通知</span>
+          <input type="checkbox" value="${role}">
+          <strong>${role}</strong>
+          <span>${roleDescriptions[role] || '查看对应通知'}</span>
         </label>
       `).join('');
+    }
+
+    function renderScopeOptions() {
+      noticeScope.innerHTML = bootstrap.scopes.map((scope) => (
+        `<option value="${scope.id}">${scope.label}</option>`
+      )).join('');
+    }
+
+    function renderFilters() {
+      filterGrid.innerHTML = [
+        '<button class="chip active" type="button" data-filter="all">全部</button>',
+        ...bootstrap.scopes.map((scope) => `<button class="chip" type="button" data-filter="${scope.id}">${scope.label}</button>`),
+      ].join('');
     }
 
     function selectedRoles() {
       return [...roleGrid.querySelectorAll('input:checked')].map((input) => input.value);
     }
 
-    function selectedGroup() {
-      return groupGrid.querySelector('input:checked')?.value || '';
-    }
-
     function applyProfileToForm() {
       roleGrid.querySelectorAll('input').forEach((input) => {
         input.checked = profile?.roles?.includes(input.value) || false;
-      });
-      groupGrid.querySelectorAll('input').forEach((input) => {
-        input.checked = input.value === profile?.group;
       });
       renderProfile();
     }
@@ -474,26 +477,14 @@
       if (!profile) {
         profileSummary.style.display = 'none';
         composerPanel.style.display = 'none';
-        noticeScope.textContent = '请先选择身份和小组。';
+        noticeScopeText.textContent = '请先选择身份。';
         return;
       }
 
       profileSummary.style.display = 'block';
-      profileSummary.textContent = `当前身份：${profile.roles.join('、')}；所在小组：${profile.group}`;
-      noticeScope.textContent = `显示支部通知，以及 ${profile.group} 的小组通知。`;
-      composerPanel.style.display = profile.roles.some((role) => role.includes('管理员')) ? 'block' : 'none';
-      renderNoticeTypeOptions();
-    }
-
-    function renderNoticeTypeOptions() {
-      const options = [];
-      if (profile?.roles.includes('支部通知管理员')) {
-        options.push('<option value="branch">支部通知（所有人可见）</option>');
-      }
-      if (profile?.roles.includes('小组通知管理员')) {
-        options.push(`<option value="group">小组通知（仅${profile.group}可见）</option>`);
-      }
-      noticeType.innerHTML = options.join('');
+      profileSummary.textContent = `当前身份：${profile.roles.join('、')}`;
+      noticeScopeText.textContent = `显示与你身份匹配的通知；支部书记可查看全部通知。`;
+      composerPanel.style.display = hasPublisherRole() ? 'block' : 'none';
     }
 
     async function fetchNotices() {
@@ -503,7 +494,9 @@
         updateBadge();
         return;
       }
-      const response = await fetch(`/api/notifications?group=${encodeURIComponent(profile.group)}`);
+      const params = new URLSearchParams();
+      profile.roles.forEach((role) => params.append('roles', role));
+      const response = await fetch(`/api/notifications?${params.toString()}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || '获取通知失败');
       notices = data.notifications;
@@ -512,7 +505,7 @@
     }
 
     function filteredNotices() {
-      return notices.filter((notice) => activeFilter === 'all' || notice.type === activeFilter);
+      return notices.filter((notice) => activeFilter === 'all' || notice.scope === activeFilter);
     }
 
     function formatTime(value) {
@@ -527,7 +520,7 @@
     function renderNotices() {
       const items = filteredNotices();
       if (!profile) {
-        noticeList.innerHTML = '<div class="empty">请先选择身份和所在小组。</div>';
+        noticeList.innerHTML = '<div class="empty">请先选择身份。</div>';
         return;
       }
       if (!items.length) {
@@ -537,30 +530,22 @@
 
       noticeList.innerHTML = items.map((notice) => {
         const isUnread = !readIds.has(notice.id);
-        const typeLabel = notice.type === 'branch' ? '支部通知' : `${notice.group}通知`;
-        const canDelete = canDeleteNotice(notice);
         return `
           <article class="notice ${isUnread ? 'unread' : ''}" data-id="${notice.id}">
             <div class="notice-head">
               <h3>${escapeHTML(notice.title)}</h3>
-              ${canDelete ? `<button class="delete-button" type="button" data-delete-id="${notice.id}">删除</button>` : ''}
+              ${hasPublisherRole() ? `<button class="delete-button" type="button" data-delete-id="${notice.id}">删除</button>` : ''}
             </div>
             <p>${escapeHTML(notice.content)}</p>
             <div class="notice-meta">
-              <span class="tag ${notice.type}">${typeLabel}</span>
-              ${notice.pinned ? '<span class="tag pin">置顶</span>' : ''}
-              <span>${escapeHTML(notice.authorRole)}</span>
+              <span class="tag scope">${escapeHTML(notice.scopeLabel || '全体')}</span>
+              ${notice.pinned ? '<span class="tag pin">重要</span>' : ''}
+              <span>${escapeHTML((notice.authorRoles || []).join('、') || notice.authorRole || '发布者')}</span>
               <span>${formatTime(notice.createdAt)}</span>
             </div>
           </article>
         `;
       }).join('');
-    }
-
-    function canDeleteNotice(notice) {
-      if (!profile) return false;
-      if (notice.type === 'branch') return profile.roles.includes('支部通知管理员');
-      return profile.roles.includes('小组通知管理员') && notice.group === profile.group;
     }
 
     function unreadCount() {
@@ -589,16 +574,13 @@
           ${label ? `<circle cx="74" cy="22" r="19" fill="#ef4444"/><text x="74" y="29" text-anchor="middle" font-size="20" fill="white" font-family="Arial" font-weight="700">${label}</text>` : ''}
         </svg>
       `;
-      const href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
-      document.querySelector('link[rel="icon"]').setAttribute('href', href);
+      document.querySelector('link[rel="icon"]').setAttribute('href', `data:image/svg+xml,${encodeURIComponent(svg)}`);
     }
 
     saveProfile.addEventListener('click', async () => {
       const roles = selectedRoles();
-      const group = selectedGroup();
       if (!roles.length) return showToast('请至少选择一个身份');
-      if (!group) return showToast('请选择所在小组');
-      profile = { roles, group };
+      profile = { roles };
       saveJSON(STORAGE.profile, profile);
       renderProfile();
       await fetchNotices();
@@ -614,17 +596,14 @@
 
     noticeForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const type = noticeType.value;
-      const authorRole = type === 'branch' ? '支部通知管理员' : '小组通知管理员';
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type,
+          scope: noticeScope.value,
           title: noticeTitle.value,
           content: noticeContent.value,
-          group: profile.group,
-          authorRole,
+          roles: profile.roles,
           pinned: noticePinned.checked,
         }),
       });
@@ -673,14 +652,13 @@
 
     async function deleteNotice(noticeId) {
       const notice = notices.find((item) => item.id === noticeId);
-      if (!notice || !canDeleteNotice(notice)) return showToast('没有删除权限');
+      if (!notice || !hasPublisherRole()) return showToast('没有删除权限');
       if (!window.confirm(`确定删除“${notice.title}”吗？`)) return;
 
-      const authorRole = notice.type === 'branch' ? '支部通知管理员' : '小组通知管理员';
       const response = await fetch(`/api/notifications/${encodeURIComponent(noticeId)}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authorRole, group: profile.group }),
+        body: JSON.stringify({ roles: profile.roles }),
       });
       const data = await response.json();
       if (!response.ok) return showToast(data.error || '删除失败');
@@ -694,9 +672,9 @@
       navigator.serviceWorker.register('/service-worker.js');
     }
 
-    renderGroupChoices();
-    applyProfileToForm();
-    fetchNotices().catch((error) => showToast(error.message));
+    loadBootstrap()
+      .then(fetchNotices)
+      .catch((error) => showToast(error.message));
     setInterval(() => fetchNotices().catch(() => {}), 30000);
   </script>
 </body>
